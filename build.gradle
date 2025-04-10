@@ -13,7 +13,6 @@ repositories {
 dependencies {
     implementation 'io.quarkus:quarkus-jsonb'
     implementation 'io.quarkus:quarkus-elytron-security-properties-file'
-    implementation 'io.quarkus:quarkus-security-jpa-reactive'
     implementation 'io.quarkus:quarkus-rest-jsonb'
     implementation 'io.quarkus:quarkus-mongodb-client'
     implementation 'io.quarkus:quarkus-hibernate-validator'

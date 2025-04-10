@@ -1,6 +1,6 @@
 quarkus:
   http:
-    port: '${LOCAL_HOST_PORT}'
+    port: ${LOCAL_HOST_PORT:8881}
   auth:
     basic: 'true'
   test:
