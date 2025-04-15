@@ -18,4 +18,10 @@ public class AirlineDto {
   @NotBlank private String code;
 
   @NotBlank private int planeCount;
+
+
+  public boolean isValid() {
+    return name != null && country != null && code != null && planeCount != 0;
+  }
+
 }
