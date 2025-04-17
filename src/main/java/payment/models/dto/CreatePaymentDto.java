@@ -16,24 +16,9 @@ import java.sql.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CreatePaymentDto {
-
-    @NotBlank
     private String reservationId;
-
-    @NotBlank
     private Date paymentDate;
-
-    @NotBlank
     private double paymentAmount;
-
-    @NotBlank
     private PaymentMethod paymentMethod;
-
-    @NotBlank
     private PaymentStatus paymentStatus;
-
-    public boolean isValid(){
-        return paymentDate != null && paymentStatus != null && paymentAmount > 0;
-    }
-
 }

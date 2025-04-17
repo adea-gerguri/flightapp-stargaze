@@ -11,13 +11,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class LowestRatedReviewDto {
-
-    @NotBlank
     private String message;
-
-    @NotBlank
     private int rating;
-
-    @NotBlank
     private String reviewDate;
 }

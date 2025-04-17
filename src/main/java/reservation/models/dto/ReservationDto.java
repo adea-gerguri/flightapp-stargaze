@@ -17,15 +17,8 @@ import java.util.Map;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ReservationDto {
-    @NotBlank
     private Date reservationDate;
-
-    @NotBlank
     private Map<Integer, SeatType> seatSelection;
-
-    @NotBlank
     private boolean specialAssistance;
-
-    @NotBlank
     private BaggageEntity baggageEntity;
 }

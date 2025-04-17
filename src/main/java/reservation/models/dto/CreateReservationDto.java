@@ -18,17 +18,8 @@ import java.util.Map;
 @Setter
 public class CreateReservationDto {
     private Date reservationDate;
-
     private String userId;
-
-    @NotBlank
     private Map<Integer, SeatType> seatSelection;
-
-    @NotBlank
     private boolean specialAssistance;
-
     private BaggageEntity baggage;
-    public boolean isValid(){
-        return   seatSelection != null ;
-    }
 }

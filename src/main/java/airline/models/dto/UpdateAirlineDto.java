@@ -11,9 +11,9 @@ import lombok.Setter;
 @Getter
 @Setter
 public class UpdateAirlineDto {
-    @NotBlank private String name;
-    @NotBlank private String country;
-    @NotBlank private String city;
-    @NotBlank private String code;
-    @NotBlank private int planeCount;
+    private String name;
+    private String country;
+    private String city;
+    private String code;
+    private int planeCount;
 }

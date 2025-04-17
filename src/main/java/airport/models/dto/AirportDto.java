@@ -15,15 +15,8 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AirportDto {
-    @NotBlank
     private String name;
-
-    @NotBlank
     private String code;
-
-    @NotBlank
     private String city;
-
-    @NotBlank
     private String country;
 }

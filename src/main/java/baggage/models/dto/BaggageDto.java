@@ -12,28 +12,11 @@ import baggage.enums.BaggageType;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BaggageDto {
-    @NotBlank
     private String reservationId;
-
-    @NotBlank
     private BaggageType baggageType;
-
-    @NotBlank
     private double length;
-
-    @NotBlank
     private double height;
-
-    @NotBlank
     private double width;
-
-    @NotBlank
     private double weight;
-
-    @NotBlank
     private double price;
-
-    public boolean isValid() {
-        return length != 0 && height != 0 && weight != 0 && width != 0 && price != 0 && baggageType != null;
-    }
 }

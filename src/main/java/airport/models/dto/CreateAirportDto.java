@@ -11,16 +11,8 @@ import lombok.Setter;
 @Getter
 @Setter
 public class CreateAirportDto {
-    @NotBlank private String name;
-
-    @NotBlank private String code;
-
-    @NotBlank private String city;
-
-    @NotBlank private String country;
-
-
-    public boolean isValid() {
-        return name != null && code != null && country != null && city != null;
-    }
+    private String name;
+    private String code;
+    private String city;
+    private String country;
 }

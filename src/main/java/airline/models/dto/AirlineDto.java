@@ -11,19 +11,11 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AirlineDto {
-  @NotBlank private String name;
+  private String name;
+  private String country;
+  private String city;
+  private String code;
+  private int planeCount;
 
-  @NotBlank private String country;
-
-  @NotBlank private String city;
-
-  @NotBlank private String code;
-
-  @NotBlank private int planeCount;
-
-
-  public boolean isValid() {
-    return name != null && country != null && city!=null && code != null && planeCount != 0;
-  }
 
 }
