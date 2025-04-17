@@ -14,10 +14,13 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import reviews.models.dto.CreateReviewDto;
+import reviews.models.dto.HighestRatedReviewDto;
+import reviews.models.dto.LowestRatedReviewDto;
 import reviews.models.dto.ReviewDto;
 import reviews.models.ReviewEntity;
 import reviews.repository.ReviewRepository;
 import reviews.service.ReviewService;
+import shared.PaginationQueryParams;
 import shared.mongoUtils.DeleteResult;
 import shared.mongoUtils.InsertResult;
 
@@ -32,7 +35,6 @@ public class ReviewsResource {
     @Inject
     ReviewService service;
 
-
     @GET
     @PermitAll
     public Uni<List<ReviewEntity>> listReviews() {
@@ -46,16 +48,16 @@ public class ReviewsResource {
     }
 
     @GET
-    @Path("/best/skip/{skip}/limit/{limit}")
+    @Path("/best")
     @PermitAll
-    public Uni<List<ReviewDto>> listHighestRated(@PathParam("skip") int skip, @PathParam("limit") int limit){
-        return service.listHighestRated(skip, limit);
+    public Uni<List<HighestRatedReviewDto>> listHighestRated(@BeanParam PaginationQueryParams params){
+        return service.listHighestRated(params.getSkip(), params.getLimit());
     }
 
     @GET
-    @Path("/worst/skip/{skip}/limit/{limit}")
-    public Uni<List<ReviewDto>> listLowestRated(@PathParam("skip") int skip,@PathParam("limit") int limit){
-        return service.listLowestRated(skip,limit);
+    @Path("/worst")
+    public Uni<List<LowestRatedReviewDto>> listLowestRated(@BeanParam PaginationQueryParams params){
+        return service.listLowestRated(params.getSkip(), params.getLimit());
     }
 
 }

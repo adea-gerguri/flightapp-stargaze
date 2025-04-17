@@ -12,6 +12,7 @@ public class AirlineMapper {
       airline.setName(airlineDto.getName());
       airline.setCode(airlineDto.getCode());
       airline.setCountry(airlineDto.getCountry());
+      airline.setCity(airlineDto.getCity());
       airline.setPlaneCount(airlineDto.getPlaneCount());
       return airline;
     }
@@ -24,6 +25,7 @@ public class AirlineMapper {
       airlineDto.setName(airline.getName());
       airlineDto.setCode(airline.getCode());
       airlineDto.setCountry(airline.getCountry());
+      airlineDto.setCity(airline.getCity());
       airlineDto.setPlaneCount(airline.getPlaneCount());
       return airlineDto;
     }

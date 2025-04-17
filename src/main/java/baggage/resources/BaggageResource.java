@@ -9,6 +9,7 @@ import jakarta.annotation.security.PermitAll;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+import shared.PaginationQueryParams;
 import shared.mongoUtils.InsertResult;
 
 import java.util.List;
@@ -32,15 +33,15 @@ public class BaggageResource {
     @Path("/weight")
     @PermitAll
     @Produces(MediaType.APPLICATION_JSON)
-    public Uni<List<BaggageWeightDto>> getBaggageGroupedByType() {
-        return baggageService.getBaggageGroupedByType();
+    public Uni<List<BaggageWeightDto>> getBaggageGroupedByType(@BeanParam PaginationQueryParams params) {
+        return baggageService.getBaggageGroupedByType(params.getSkip(), params.getLimit(), params.getSort());
     }
 
     @GET
     @Path("/price")
     @PermitAll
     @Produces(MediaType.APPLICATION_JSON)
-    public Uni<List<BaggagePriceDto>> getBaggageSummary() {
-        return baggageService.getBaggageSummaryByReservationId();
+    public Uni<List<BaggagePriceDto>> getBaggageSummary(@BeanParam PaginationQueryParams params) {
+        return baggageService.getBaggageSummaryByReservationId(params.getSkip(), params.getLimit(), params.getSort());
     }
 }

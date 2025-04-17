@@ -1,9 +1,9 @@
-package payment.exceptions;
+package reservation.exception;
 
-public class PaymentException extends RuntimeException {
+public class ReservationException extends RuntimeException {
     private final int statusCode;
 
-    public PaymentException(String message, int statusCode) {
+    public ReservationException(String message, int statusCode) {
         super(message);
         this.statusCode = statusCode;
     }

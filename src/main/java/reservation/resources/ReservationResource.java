@@ -14,6 +14,7 @@ import reservation.models.dto.ReservationDto;
 import reservation.models.ReservationEntity;
 import reservation.repository.ReservationRepository;
 import reservation.service.ReservationService;
+import shared.PaginationQueryParams;
 import shared.mongoUtils.InsertResult;
 
 import java.util.List;
@@ -27,8 +28,8 @@ public class ReservationResource {
 
     @GET
     @PermitAll
-    public Uni<List<ReservationEntity>> listReservations() {
-        return service.listReservations();
+    public Uni<List<ReservationEntity>> listReservations(@BeanParam PaginationQueryParams params) {
+        return service.listReservations(params.getSkip(), params.getLimit());
     }
 
 }

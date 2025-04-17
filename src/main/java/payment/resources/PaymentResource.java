@@ -11,6 +11,7 @@ import payment.models.dto.PaymentDto;
 import payment.models.PaymentEntity;
 import payment.repository.PaymentRepository;
 import payment.service.PaymentService;
+import shared.PaginationQueryParams;
 import shared.mongoUtils.InsertResult;
 
 import java.util.List;
@@ -31,9 +32,9 @@ public class PaymentResource {
 
     @GET
     @PermitAll
-    @Path("/lowest/skip/{skip}/limit/{limit}")
-    public Uni<List<PaymentDto>> listLowestAmount(@PathParam("skip") int skip,@PathParam("limit") int limit){
-        return paymentService.listLowestAmount(skip, limit);
+    @Path("/lowest")
+    public Uni<List<PaymentDto>> listLowestAmount(@BeanParam PaginationQueryParams params){
+        return paymentService.listLowestAmount(params.getSkip(),params.getLimit());
     }
 
 

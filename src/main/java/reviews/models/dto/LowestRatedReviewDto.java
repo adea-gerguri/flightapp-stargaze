@@ -5,18 +5,19 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.validator.constraints.Range;
 
-
-@Getter
-@Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class ReviewDto {
-    private String reservationId;
-    private String message;
-    @Range(min=1, max=5)
-    private int rating;
-    private String reviewDate;
+@Getter
+@Setter
+public class LowestRatedReviewDto {
 
+    @NotBlank
+    private String message;
+
+    @NotBlank
+    private int rating;
+
+    @NotBlank
+    private String reviewDate;
 }

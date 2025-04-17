@@ -1,9 +1,9 @@
-package payment.exceptions;
+package flight.exceptions;
 
-public class PaymentException extends RuntimeException {
+public class FlightException extends RuntimeException {
     private final int statusCode;
 
-    public PaymentException(String message, int statusCode) {
+    public FlightException(String message, int statusCode) {
         super(message);
         this.statusCode = statusCode;
     }

@@ -17,16 +17,14 @@ import java.sql.Date;
 @Getter
 @Setter
 public class CreateReviewDto {
-    private String userId;
+    private String reservationId;
 
-    @NotBlank(message = "must not be blank")
     @NoForbiddenWords(message = "be respectful to the community")
     private String message;
+    private String reviewDate;
 
     @Min(value = 0, message = "rating must be between 0 and 5")
     @Max(value = 5, message = "rating must be between 0 and 5")
     private int rating;
 
-    @NotBlank(message="must not be blank")
-    private String reviewDate;
 }

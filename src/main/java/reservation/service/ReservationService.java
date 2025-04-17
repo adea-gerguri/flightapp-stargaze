@@ -7,6 +7,7 @@ import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
+import reservation.exception.ReservationException;
 import reservation.mappers.ReservationMapper;
 import reservation.models.ReservationEntity;
 import reservation.models.dto.CreateReservationDto;
@@ -20,8 +21,10 @@ public class ReservationService {
     @Inject
     ReservationRepository reservationRepository;
 
-    public Uni<List<ReservationEntity>> listReservations() {
-        return reservationRepository.listReservations();
+    public Uni<List<ReservationEntity>> listReservations(int skip, int limit) {
+        return reservationRepository.listReservations(skip, limit)
+                .onFailure()
+                .transform(e->new ReservationException(e.getMessage(),404));
     }
 
 }

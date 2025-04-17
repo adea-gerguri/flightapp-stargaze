@@ -4,10 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import reviews.models.dto.ReviewDto;
-import org.bson.types.ObjectId;
-
-import java.sql.Date;
 
 @Setter
 @Getter
@@ -15,7 +11,7 @@ import java.sql.Date;
 @AllArgsConstructor
 public class ReviewEntity {
     private String id;
-    private String userId;
+    private String reservationId;
     private String message;
     private int rating;
     private String reviewDate;

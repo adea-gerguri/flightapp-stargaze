@@ -1,5 +1,8 @@
 package flight.service;
 
+import airline.exceptions.AirlineException;
+import airline.mappers.AirlineMapper;
+import flight.exceptions.FlightException;
 import flight.mappers.FlightMapper;
 import flight.models.dto.CreateFlightDto;
 import flight.models.dto.FlightDto;
@@ -8,7 +11,9 @@ import flight.repository.FlightRepository;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.validation.ConstraintViolationException;
 import jakarta.ws.rs.BadRequestException;
+import shared.GlobalHibernateValidator;
 import shared.mongoUtils.DeleteResult;
 import shared.mongoUtils.InsertResult;
 
@@ -19,35 +24,62 @@ public class FlightService {
     @Inject
     FlightRepository flightRepository;
 
+    @Inject
+    GlobalHibernateValidator validator;
 
     public Uni<List<FlightDto>> listLowestPrice(int skip, int limit){
-        return flightRepository.listLowestPrice(skip, limit);
+        return flightRepository.listLowestPrice(skip, limit)
+                .onFailure()
+                .transform(e-> {throw new FlightException(e.getMessage(),404);
+                });
     }
 
     public Uni<DeleteResult> deleteById(String id) {
-        return flightRepository.deleteById(id);
+        return flightRepository.deleteById(id)
+                .onItem()
+                .transform(deleteResult->{
+                    if(deleteResult.getDeletedCount() == 0){
+                        throw new FlightException("Flight not found", 404);
+                    }
+                    return deleteResult;
+                });
     }
 
-
     public Uni<InsertResult> addFlight(CreateFlightDto flightDto){
-        if(!flightDto.isValid()){
-            return Uni.createFrom().failure(new BadRequestException("Flight not valid!"));
-        }
-        return Uni.createFrom()
-                .item(FlightMapper.toFlight(flightDto))
-                .flatMap(flight-> flightRepository.add(FlightMapper.toFlightDto(flight)));
+        return validator.validate(flightDto)
+                .onFailure(ConstraintViolationException.class)
+                .transform(e->new AirlineException(e.getMessage(), 400))
+                .flatMap(validatedDto ->{
+                    return flightRepository.add(FlightMapper.toFlight(validatedDto));
+                });
     }
 
     public Uni<List<FlightDto>> getFastestRoute(String departureAirportId, String destinationAirportId, String departureDate) {
-        return flightRepository.findFastestRoute(destinationAirportId, departureDate, departureAirportId);
+        return flightRepository.findFastestRoute(destinationAirportId, departureDate, departureAirportId)
+                .onFailure()
+                .transform(e-> {throw new FlightException(e.getMessage(),404);
+                });
     }
 
     public Uni<List<FlightDto>> getCheapestRoute(String departureAirportId, String destinationAirportId, String departureDate){
-        return flightRepository.findCheapestRoute(destinationAirportId, departureDate, departureAirportId);
+        return flightRepository.findCheapestRoute(destinationAirportId, departureDate, departureAirportId)
+                .onFailure()
+                .transform(e-> {throw new FlightException(e.getMessage(),404);
+                });
+    }
+
+    public Uni<List<FlightDto>> getMostExpensiveRoute(String departureAirportId, String destinationAirportId, String departureDate){
+        return flightRepository.findMostExpensiveRoute(destinationAirportId, departureDate, departureAirportId)
+                .onFailure()
+                .transform(e-> {throw new FlightException(e.getMessage(),404);
+                });
     }
 
     public Uni<List<FlightDto>> getFastestStopover(String departureAirportId, String destinationAirportId, String departureDate){
-        return flightRepository.findFlightsWithStopsAndWaitingTimes(departureAirportId, destinationAirportId, departureDate);
+        return flightRepository.findFlightsWithStopsAndWaitingTimes(departureAirportId, destinationAirportId, departureDate)
+                .onFailure()
+                .transform(e-> {throw new FlightException(e.getMessage(),404);
+                });
     }
 
 

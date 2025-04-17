@@ -3,11 +3,14 @@ package ticket.service;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.validation.ConstraintViolationException;
 import jakarta.ws.rs.BadRequestException;
 import org.bson.Document;
+import shared.GlobalHibernateValidator;
 import shared.mongoUtils.DeleteResult;
 import shared.mongoUtils.InsertResult;
 import shared.mongoUtils.UpdateResult;
+import ticket.exceptions.TicketException;
 import ticket.mappers.TicketMapper;
 import ticket.models.TicketEntity;
 import ticket.models.dto.CreateTicketDto;
@@ -22,18 +25,28 @@ public class TicketService {
     @Inject
     TicketRepository repository;
 
+
+    @Inject
+    GlobalHibernateValidator validator;
+
     public Uni<InsertResult> addTicket(CreateTicketDto ticketDto) {
-        if (!ticketDto.isValid()) {
-            return Uni.createFrom().failure(new BadRequestException("Ticket not valid!"));
-        }
-        return Uni.createFrom()
-                .item(TicketMapper.toTicket(ticketDto))
-                .flatMap(ticket -> repository.addTicket(ticket));
+        return validator.validate(ticketDto)
+                .onFailure(ConstraintViolationException.class)
+                .transform(e->new TicketException(e.getMessage(), 400))
+                .flatMap(validatedDto ->{
+                    return repository.addTicket(TicketMapper.toTicket(validatedDto));
+                });
     }
 
     public Uni<DeleteResult> deleteTicketById(String id){
-        return repository.deleteTicket(id);
+
+        return repository.deleteTicket(id)
+                .onItem()
+                .transform(deleteResult->{
+                    if(deleteResult.getDeletedCount() == 0){
+                        throw new TicketException("Ticket not found", 404);
+                    }
+                    return deleteResult;
+                });
     }
-
-
 }

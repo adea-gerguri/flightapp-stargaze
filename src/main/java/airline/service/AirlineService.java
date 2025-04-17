@@ -1,41 +1,76 @@
 package airline.service;
 
+import airline.exceptions.AirlineException;
 import airline.mappers.AirlineMapper;
 import airline.models.AirlineEntity;
 import airline.models.dto.AirlineDto;
+import airline.models.dto.AirlinesByCityDto;
+import airline.models.dto.AirlinesByCountryDto;
 import airline.models.dto.CreateAirlineDTO;
 import airline.repository.AirlineRepository;
+import airport.exceptions.AirportException;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.validation.ConstraintViolationException;
 import jakarta.ws.rs.BadRequestException;
 import java.util.List;
 
+import shared.GlobalHibernateValidator;
 import shared.mongoUtils.DeleteResult;
 import shared.mongoUtils.InsertResult;
 
 @ApplicationScoped
 public class AirlineService {
+  @Inject
+  GlobalHibernateValidator validator;
+
   @Inject AirlineRepository airlineRepository;
 
   public Uni<InsertResult> addAirline(CreateAirlineDTO airlineDTO) {
-    if (!airlineDTO.isValid()) {
-      return Uni.createFrom().failure(new BadRequestException("Airline not valid!"));
-    }
-    return Uni.createFrom()
-            .item(AirlineMapper.toAirlineEntity(airlineDTO))
-            .flatMap(airline ->airlineRepository.addAirline(airline));
+      return validator.validate(airlineDTO)
+              .onFailure(ConstraintViolationException.class)
+              .transform(e->new AirlineException(e.getMessage(), 400))
+              .flatMap(validatedDto ->{
+                  return airlineRepository.addAirline(AirlineMapper.toAirlineEntity(validatedDto));
+              });
   }
+
 
   public Uni<DeleteResult> deleteAirline(String id){
-    return airlineRepository.deleteAirline(id);
+      return airlineRepository.deleteAirline(id)
+              .onItem()
+              .transform(deleteResult->{
+                  if(deleteResult.getDeletedCount() == 0){
+                      throw new AirlineException("Airline not found", 404);
+                  }
+                  return deleteResult;
+              });
   }
 
-  public Uni<List<AirlineEntity>> groupAirlinesByCountry() {
-    return airlineRepository.groupAirlinesByCountry();
+
+  public Uni<List<AirlinesByCountryDto>> groupAirlinesByCountry(int skip, int limit, int sort) {
+    return airlineRepository.groupAirlinesByCountry(skip, limit, sort)
+            .onFailure()
+            .transform(e->{throw new AirlineException(e.getMessage(), 404);});
   }
 
-  public Uni<List<AirlineEntity>> groupAirlinesByCity() {
-    return airlineRepository.groupByCity();
+  public Uni<List<AirlinesByCityDto>> groupAirlinesByCity(int skip, int limit, int sort) {
+    return airlineRepository.groupByCity(skip, limit, sort)
+            .onFailure()
+            .transform(e-> { throw new AirlineException(e.getMessage(), 404);});
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+

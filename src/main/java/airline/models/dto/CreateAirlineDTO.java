@@ -11,12 +11,9 @@ import lombok.Setter;
 @Getter
 @Setter
 public class CreateAirlineDTO {
-  @NotBlank private String name;
-  @NotBlank private String country;
-  @NotBlank private String code;
-  @NotBlank private int planeCount;
-
-  public boolean isValid() {
-    return name != null && country != null && code != null && planeCount != 0;
-  }
+  private String name;
+  private String country;
+  private String city;
+  private String code;
+  private int planeCount;
 }

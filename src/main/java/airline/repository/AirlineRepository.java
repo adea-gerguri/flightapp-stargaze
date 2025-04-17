@@ -2,10 +2,14 @@ package airline.repository;
 
 import airline.models.AirlineEntity;
 import airline.models.dto.AirlineDto;
+import airline.models.dto.AirlinesByCityDto;
+import airline.models.dto.AirlinesByCountryDto;
+import airline.models.dto.CreateAirlineDTO;
 import airport.models.dto.AirportGroupByCountryDto;
 import com.mongodb.client.model.Accumulators;
 import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Projections;
+import com.mongodb.client.model.Sorts;
 import io.quarkus.mongodb.FindOptions;
 import io.quarkus.mongodb.reactive.ReactiveMongoClient;
 import io.quarkus.mongodb.reactive.ReactiveMongoCollection;
@@ -27,6 +31,8 @@ public class AirlineRepository {
   @Inject
   MongoUtil mongoService;
 
+  private Bson sorting;
+
   public Uni<InsertResult> addAirline(AirlineEntity airline) {
     return MongoUtil.insertOne(getCollection(), airline);
   }
@@ -35,27 +41,44 @@ public class AirlineRepository {
     return MongoUtil.deleteOne(getCollection(), id);
   }
 
-  public Uni<List<AirlineEntity>> groupByCity(){
+  public Uni<List<AirlinesByCityDto>> groupByCity(int skip, int limit, int sort){
+    if(sort==1){
+      sorting = Sorts.ascending("planeCount");
+    } else{
+      sorting = Sorts.descending("planeCount");
+    }
     List<Bson>pipeline = List.of(
-            Aggregates.group("$city",Accumulators.sum("planeCount", 1)),
+            Aggregates.group("$city",Accumulators.sum("planeCount","$planeCount")),
             Aggregates.project(Projections.fields(
                     Projections.computed("city","$_id"),
                     Projections.include("planeCount")
-            ))
+            )),
+            Aggregates.sort(sorting),
+            Aggregates.skip(skip),
+            Aggregates.limit(limit)
     );
-    return MongoUtil.aggregate(getCollection(), pipeline, AirlineEntity.class);
+    return MongoUtil.aggregate(getCollection(), pipeline, AirlinesByCityDto.class);
   }
 
-  public Uni<List<AirlineEntity>> groupAirlinesByCountry() {
+
+  public Uni<List<AirlinesByCountryDto>> groupAirlinesByCountry(int skip, int limit, int sort) {
+    if(sort==1){
+      sorting = Sorts.ascending("planeCount");
+    }else{
+      sorting = Sorts.descending("planeCount");
+    }
     List<Bson> pipeline = List.of(
-            Aggregates.group("$country", Accumulators.sum("planeCount", 1)),
+            Aggregates.group("$country", Accumulators.sum("planeCount", "$planeCount")),
             Aggregates.project(Projections.fields(
                     Projections.computed("country", "$_id"),
                     Projections.include("planeCount")
-            ))
+            )),
+            Aggregates.sort(sorting),
+            Aggregates.skip(skip),
+            Aggregates.limit(limit)
     );
 
-    return MongoUtil.aggregate(getCollection(), pipeline, AirlineEntity.class);
+    return MongoUtil.aggregate(getCollection(), pipeline, AirlinesByCountryDto.class);
   }
 
 

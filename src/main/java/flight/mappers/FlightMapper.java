@@ -1,7 +1,6 @@
 package flight.mappers;
 
 import flight.models.dto.CreateFlightDto;
-import flight.models.dto.FlightDto;
 import flight.models.FlightEntity;
 
 public class FlightMapper {

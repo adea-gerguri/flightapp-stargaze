@@ -1,14 +1,9 @@
 package flight.repository;
 
-import airport.models.AirportEntity;
 import com.mongodb.client.model.*;
-import flight.exceptions.AddFlightException;
 import flight.mappers.FlightMapper;
 import flight.models.dto.CreateFlightDto;
 import flight.models.dto.FlightDto;
-import flight.models.dto.StopoverDto;
-import io.quarkus.mongodb.FindOptions;
-import io.quarkus.mongodb.reactive.ReactiveMongoClient;
 import io.quarkus.mongodb.reactive.ReactiveMongoCollection;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -16,24 +11,17 @@ import jakarta.inject.Inject;
 import flight.models.FlightEntity;
 import org.bson.Document;
 import org.bson.conversions.Bson;
-import org.bson.types.ObjectId;
 import shared.mongoUtils.DeleteResult;
 import shared.mongoUtils.InsertResult;
 import shared.mongoUtils.MongoUtil;
-
-
 import java.util.List;
 
-import static com.mongodb.client.model.Sorts.ascending;
-import static com.mongodb.client.model.Sorts.descending;
 
 @ApplicationScoped
 public class FlightRepository {
 
     @Inject
     MongoUtil mongoService;
-
-
 
     public Uni<List<FlightDto>> listLowestPrice(int skip, int limit) {
         List<Bson> pipeline = List.of(
@@ -47,7 +35,6 @@ public class FlightRepository {
         );
         return MongoUtil.aggregate(getCollection(), pipeline, FlightDto.class);
     }
-
 
     public Uni<List<FlightDto>> findFastestRoute(String destinationAirportId, String departureDate, String departureAirportId) {
         List<Bson> pipeline = List.of(
@@ -94,6 +81,28 @@ public class FlightRepository {
         return MongoUtil.aggregate(getCollection(), pipeline, FlightDto.class);
     }
 
+    public Uni<List<FlightDto>> findMostExpensiveRoute(String destinationAirportId, String departureDate, String departureAirportId) {
+        List<Bson> pipeline = List.of(
+                Aggregates.match(Filters.and(
+                        Filters.eq("arrivalAirportId", destinationAirportId),
+                        Filters.eq("departureAirportId", departureAirportId),
+                        Filters.regex("departureTime", departureDate)
+                )),
+                Aggregates.project(Document.parse("{ " +
+                        "'flightNumber': 1, " +
+                        "'departureAirportId': 1, " +
+                        "'arrivalAirportId': 1, " +
+                        "'departureTime': 1, " +
+                        "'arrivalTime': 1, " +
+                        "'price':1,"+
+                        "'duration': { $subtract: [ { $toDate: '$arrivalTime' }, { $toDate: '$departureTime' } ] } " +
+                        "}")),
+                Aggregates.sort(Sorts.descending("price")),
+                Aggregates.limit(1)
+        );
+
+        return MongoUtil.aggregate(getCollection(), pipeline, FlightDto.class);
+    }
 
     public Uni<List<FlightDto>> findFlightsWithStopsAndWaitingTimes(String departureAirportId, String destinationAirportId, String departureDate) {
         List<Bson> pipeline = List.of(
@@ -210,8 +219,8 @@ public class FlightRepository {
     }
 
 
-    public Uni<InsertResult> add(CreateFlightDto flight){
-        return MongoUtil.insertOne(getCollection(), FlightMapper.toFlight(flight));
+    public Uni<InsertResult> add(FlightEntity flight){
+        return MongoUtil.insertOne(getCollection(), flight);
     }
 
 

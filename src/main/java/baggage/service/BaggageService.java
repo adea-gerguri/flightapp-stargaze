@@ -1,5 +1,10 @@
 package baggage.service;
 
+import airline.exceptions.AirlineException;
+import airline.mappers.AirlineMapper;
+import airline.models.dto.CreateAirlineDTO;
+import airport.mappers.AirportMapper;
+import baggage.exceptions.BaggageException;
 import baggage.mappers.BaggageMapper;
 import baggage.models.dto.BaggagePriceDto;
 import baggage.models.dto.BaggageWeightDto;
@@ -9,6 +14,7 @@ import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
+import shared.GlobalHibernateValidator;
 import shared.mongoUtils.InsertResult;
 
 import java.util.List;
@@ -18,21 +24,28 @@ public class BaggageService {
     @Inject
     BaggageRepository baggageRepository;
 
+    @Inject
+    GlobalHibernateValidator validator;
+
     public Uni<InsertResult> addBaggage(CreateBaggageDto baggageDto){
-        if(!baggageDto.isValid()){
-            return Uni.createFrom().failure(new BadRequestException("Baggage is not valid"));
-        }
-        return Uni.createFrom()
-                .item(BaggageMapper.toBaggageEntity(baggageDto))
-                .flatMap(baggage -> baggageRepository.addBaggage(baggage));
+        return validator.validate(baggageDto)
+                .onFailure()
+                .transform(e->new BaggageException(e.getMessage(), 400))
+                .flatMap(validatedDto ->{
+                    return baggageRepository.addBaggage(BaggageMapper.toBaggageEntity(validatedDto));
+                });
     }
 
-    public Uni<List<BaggageWeightDto>> getBaggageGroupedByType() {
-        return baggageRepository.groupByBaggageType();
+    public Uni<List<BaggageWeightDto>> getBaggageGroupedByType(int skip, int limit, int sort) {
+        return baggageRepository.groupByBaggageType(skip, limit, sort)
+                .onFailure()
+                .transform(e->new BaggageException(e.getMessage(), 400));
     }
 
-    public Uni<List<BaggagePriceDto>> getBaggageSummaryByReservationId() {
-        return baggageRepository.groupByReservationIdAndTotalPrice();
+    public Uni<List<BaggagePriceDto>> getBaggageSummaryByReservationId(int skip, int limit, int sort) {
+        return baggageRepository.groupByReservationIdAndTotalPrice(skip, limit, sort)
+                .onFailure()
+                .transform(e->new BaggageException(e.getMessage(),404));
     }
 
 

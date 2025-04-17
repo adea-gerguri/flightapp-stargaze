@@ -5,6 +5,7 @@ import jakarta.annotation.security.PermitAll;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+import shared.PaginationQueryParams;
 import shared.mongoUtils.DeleteResult;
 import shared.mongoUtils.InsertResult;
 import user.models.dto.CreateUserDto;
@@ -22,9 +23,8 @@ public class UserResource {
 
     @GET
     @PermitAll
-    @Path("/skip/{skip}/limit/{limit}")
-    public Uni<List<UserDto>> listUsers(@PathParam("skip") int skip,@PathParam("limit") int limit) {
-        return service.listUsers(skip, limit);
+    public Uni<List<UserDto>> listUsers(@BeanParam PaginationQueryParams params) {
+        return service.listUsers(params.getSkip(), params.getLimit());
     }
 
     @POST

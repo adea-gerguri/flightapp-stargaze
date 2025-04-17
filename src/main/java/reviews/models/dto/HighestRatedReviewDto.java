@@ -1,22 +1,18 @@
 package reviews.models.dto;
 
 import jakarta.validation.constraints.NotBlank;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.validator.constraints.Range;
 
-
-@Getter
-@Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class ReviewDto {
-    private String reservationId;
+@Getter
+@Setter
+public class HighestRatedReviewDto {
     private String message;
-    @Range(min=1, max=5)
     private int rating;
     private String reviewDate;
-
 }

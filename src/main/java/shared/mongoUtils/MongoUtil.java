@@ -2,30 +2,27 @@ package shared.mongoUtils;
 
 import com.mongodb.client.model.Filters;
 import io.quarkus.mongodb.FindOptions;
-import io.quarkus.mongodb.reactive.ReactiveMongoClient;
 import io.quarkus.mongodb.reactive.ReactiveMongoCollection;
 import io.quarkus.runtime.ExecutorRecorder;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.NotFoundException;
-import org.bson.BsonDocument;
-import org.bson.BsonObjectId;
-import org.bson.BsonString;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
-import reviews.models.ReviewEntity;
+import org.hibernate.validator.spi.messageinterpolation.LocaleResolver;
 
 import java.util.List;
 
 import static com.mongodb.client.model.Sorts.ascending;
-import static com.mongodb.client.model.Sorts.descending;
+
 
 @ApplicationScoped
 public class MongoUtil {
     @Inject
     MongoDB mongoDB;
+
 
     public <T> ReactiveMongoCollection<T> getCollection(String collection, Class<T> type){
         return mongoDB.getDatabase().getCollection(collection, type);
@@ -93,14 +90,6 @@ public class MongoUtil {
         return collection.countDocuments(filter);
     }
 
-//    public Uni<List<ReviewEntity>> highestRated(int skip, int limit){
-//        return getCollection().find(new FindOptions().sort(ascending("rating"))
-//                        .skip(skip)
-//                        .limit(limit))
-//                .collect()
-//                .asList();
-//
-//    }
     public static <T> Uni<List<T>> paginateAscending(ReactiveMongoCollection<T> collection, int skip, int limit, String field) {
         return collection.find(new FindOptions().sort(ascending(field))
                 .skip(skip)

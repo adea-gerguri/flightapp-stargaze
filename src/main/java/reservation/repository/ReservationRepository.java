@@ -1,26 +1,14 @@
 package reservation.repository;
 
-import airline.models.AirlineEntity;
 import io.quarkus.mongodb.FindOptions;
-import io.quarkus.mongodb.reactive.ReactiveMongoClient;
 import io.quarkus.mongodb.reactive.ReactiveMongoCollection;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import reservation.exception.ReservationFailedException;
-import reservation.models.dto.ReservationDto;
-import reservation.mappers.ReservationMapper;
-import baggage.models.BaggageEntity;
 import reservation.models.ReservationEntity;
-import org.bson.Document;
-import reviews.models.ReviewEntity;
-import shared.mongoUtils.InsertResult;
 import shared.mongoUtils.MongoUtil;
 
-import java.sql.Date;
 import java.util.List;
-
-import static shared.mongoUtils.MongoUtil.findOne;
 
 @ApplicationScoped
 public class ReservationRepository {
@@ -28,8 +16,8 @@ public class ReservationRepository {
     MongoUtil mongoService;
 
 
-    public Uni<List<ReservationEntity>> listReservations() {
-        return MongoUtil.listAll(getCollection(), new FindOptions());
+    public Uni<List<ReservationEntity>> listReservations(int skip, int limit) {
+        return MongoUtil.listAll(getCollection(), new FindOptions().skip(skip).limit(limit));
     }
 
     private ReactiveMongoCollection<ReservationEntity> getCollection() {

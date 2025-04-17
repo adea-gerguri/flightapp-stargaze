@@ -13,7 +13,7 @@ public class ReviewMapper {
 
             reviewEntity.setReviewDate(reviewDto.getReviewDate());
             reviewEntity.setRating(reviewDto.getRating());
-            reviewEntity.setUserId(reviewDto.getUserId());
+            reviewEntity.setReservationId(reviewDto.getReservationId());
             reviewEntity.setMessage(reviewDto.getMessage());
             return reviewEntity;
         }
@@ -23,6 +23,7 @@ public class ReviewMapper {
         if(reviewEntity !=null){
             ReviewDto reviewDto = new ReviewDto();
             reviewDto.setReviewDate(reviewEntity.getReviewDate());
+            reviewDto.setReservationId(reviewEntity.getReservationId());
             reviewDto.setRating(reviewEntity.getRating());
             reviewDto.setMessage(reviewEntity.getMessage());
             return reviewDto;

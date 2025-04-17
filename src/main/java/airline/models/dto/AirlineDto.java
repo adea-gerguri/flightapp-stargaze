@@ -15,13 +15,15 @@ public class AirlineDto {
 
   @NotBlank private String country;
 
+  @NotBlank private String city;
+
   @NotBlank private String code;
 
   @NotBlank private int planeCount;
 
 
   public boolean isValid() {
-    return name != null && country != null && code != null && planeCount != 0;
+    return name != null && country != null && city!=null && code != null && planeCount != 0;
   }
 
 }

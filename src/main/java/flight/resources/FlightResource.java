@@ -1,6 +1,7 @@
 package flight.resources;
 
 
+import flight.RouteQueryParams;
 import flight.models.dto.CreateFlightDto;
 import flight.models.dto.FlightDto;
 import flight.models.dto.StopoverDto;
@@ -11,6 +12,7 @@ import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+import shared.PaginationQueryParams;
 import shared.mongoUtils.DeleteResult;
 import shared.mongoUtils.InsertResult;
 
@@ -26,9 +28,9 @@ public class FlightResource {
 
     @GET
     @PermitAll
-    @Path("/skip/{skip}/limit/{limit}/")
-    public Uni<List<FlightDto>> listLowestPrice(@PathParam("skip") int skip, @PathParam("limit") int limit){
-        return flightService.listLowestPrice(skip, limit);
+    @Path("/lowest")
+    public Uni<List<FlightDto>> listLowestPrice(@BeanParam PaginationQueryParams params){
+        return flightService.listLowestPrice(params.getSkip(), params.getLimit());
     }
 
 
@@ -47,28 +49,27 @@ public class FlightResource {
 
 
     @GET
-    @Path("/fastest/{departureAirportId}/{destinationAirportId}/{departureDate}")
-    public Uni<List<FlightDto>> getFastestRoute(@PathParam("departureAirportId") String departureAirportId,
-                                            @PathParam("destinationAirportId") String destinationAirportId,
-                                            @PathParam("departureDate") String departureDate) {
-        return flightService.getFastestRoute(departureAirportId, destinationAirportId, departureDate);
+    @Path("/fastest")
+    public Uni<List<FlightDto>> getFastestRoute(@BeanParam RouteQueryParams params) {
+        return flightService.getFastestRoute(params.getDepartureAirportId(), params.getDestinationAirportId(), params.getDepartureDate());
     }
 
     @GET
-    @Path("/stopover/{departureAirportId}/{destinationAirportId}/{departureDate}")
-    public Uni<List<FlightDto>> possibleStopOvers(@PathParam("departureAirportId") String departureAirportId,
-                                                          @PathParam("destinationAirportId") String destinationAirportId,
-                                                          @PathParam("departureDate") String departureDate) {
-        return flightService.getFastestStopover(departureAirportId, destinationAirportId, departureDate);
+    @Path("/stopover")
+    public Uni<List<FlightDto>> possibleStopOvers(@BeanParam RouteQueryParams params) {
+        return flightService.getFastestStopover(params.getDepartureAirportId(), params.getDestinationAirportId(), params.getDepartureDate());
     }
 
+    @GET
+    @Path("/cheapest")
+    public Uni<List<FlightDto>> getCheapestRoute(@BeanParam RouteQueryParams params) {
+        return flightService.getCheapestRoute(params.getDepartureAirportId(), params.getDestinationAirportId(), params.getDepartureDate());
+    }
 
     @GET
-    @Path("/cheapest/{departureAirportId}/{destinationAirportId}/{departureDate}")
-    public Uni<List<FlightDto>> getCheapestRoute(@PathParam("departureAirportId") String departureAirportId,
-                                            @PathParam("destinationAirportId") String destinationAirportId,
-                                            @PathParam("departureDate") String departureDate) {
-        return flightService.getCheapestRoute(departureAirportId, destinationAirportId, departureDate);
+    @Path("/most-expensive")
+    public Uni<List<FlightDto>> getMostExpensiveRoute(@BeanParam RouteQueryParams params) {
+        return flightService.getMostExpensiveRoute(params.getDepartureAirportId(), params.getDestinationAirportId(), params.getDepartureDate());
     }
 }
 

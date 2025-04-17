@@ -16,6 +16,9 @@ public class UpdateAirportDto {
     private String city;
     private String country;
     private String airlineName;
+    public boolean isValid() {
+        return name != null && code != null && country != null && city != null;
+    }
 
 }
 

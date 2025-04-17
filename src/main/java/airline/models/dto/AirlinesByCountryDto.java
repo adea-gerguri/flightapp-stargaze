@@ -1,4 +1,4 @@
-package airport.models.dto;
+package airline.models.dto;
 
 
 import lombok.AllArgsConstructor;
@@ -10,7 +10,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Setter
-public class AirportGroupByAirlineDto {
-    private String airlineName;
-    private int airportCount;
+public class AirlinesByCountryDto {
+    private String country;
+    private int planeCount;
 }
