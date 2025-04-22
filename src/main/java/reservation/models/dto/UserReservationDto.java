@@ -12,5 +12,5 @@ import lombok.Setter;
 public class UserReservationDto {
     private String userId;
     private long reservationCount;
-    private double price;
+    private long refundCount;
 }

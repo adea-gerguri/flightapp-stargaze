@@ -69,11 +69,11 @@ public class ReservationRepository {
                 Aggregates.project(Projections.fields(
                         Projections.excludeId(),
                         Projections.include("reservationCount"),
-                        Projections.computed("userId", "$_id")
+                        Projections.computed("userId", "$userId")
                 ))
         );
 
-        return getCollection()
+        return getCollectionDto()
                 .aggregate(pipeline, UserReservationDto.class)
                 .collect()
                 .first()
@@ -87,6 +87,36 @@ public class ReservationRepository {
                 .onFailure(ReservationException.class)
                 .recoverWithItem(() -> {
                     throw new ReservationException("No reservations found", 404);
+                });
+    }
+
+    public Uni<UserReservationDto> findUserWithMostRefundedTickets() {
+        List<Bson> pipeline = Arrays.asList(
+                Aggregates.match(Filters.eq("reservationStatus", "RESERVED")),
+                Aggregates.group("$userId", Accumulators.sum("refundCount", 1)),
+                Aggregates.sort(Sorts.descending("refundCount")),
+                Aggregates.limit(1),
+                Aggregates.project(Projections.fields(
+                        Projections.excludeId(),
+                        Projections.include("refundCount"),
+                        Projections.computed("userId", "$userId")
+                ))
+        );
+
+        return getCollectionDto()
+                .aggregate(pipeline, UserReservationDto.class)
+                .collect()
+                .first()
+                .onItem().transform(reservation -> {
+                    if (reservation != null) {
+                        return reservation;
+                    } else {
+                        throw new ReservationException("No refunded reservations found", 404);
+                    }
+                })
+                .onFailure(ReservationException.class)
+                .recoverWithItem(() -> {
+                    throw new ReservationException("No refunded reservations found", 404);
                 });
     }
 

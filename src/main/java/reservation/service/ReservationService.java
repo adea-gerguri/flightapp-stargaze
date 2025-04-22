@@ -154,6 +154,7 @@ public class ReservationService {
                                                 return Uni.createFrom().item(new UserRefundDto(
                                                         userId,
                                                         1,
+                                                        0,
                                                         ReservationStatus.REFUNDED
                                                 ));
                                             });
@@ -163,6 +164,24 @@ public class ReservationService {
                             });
                 });
     }
+
+    public Uni<UserReservationDto> findUserWithMostRefundedTickets() {
+        return reservationRepository.findUserWithMostRefundedTickets()
+                .onItem().transform(reservation -> {
+                    if (reservation != null) {
+                        return reservation;
+                    } else {
+                        throw new ReservationException("No refunded reservations found", 404);
+                    }
+                })
+                .onFailure(ReservationException.class)
+                .recoverWithItem(() -> {
+                    throw new ReservationException("No refunded reservations found", 404);
+                });
+    }
+
+
+
 
 
 

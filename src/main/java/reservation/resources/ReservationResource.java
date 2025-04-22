@@ -12,6 +12,7 @@ import jakarta.ws.rs.core.MediaType;
 import reservation.models.dto.CreateReservationDto;
 import reservation.models.dto.ReservationDto;
 import reservation.models.ReservationEntity;
+import reservation.models.dto.UserRefundDto;
 import reservation.models.dto.UserReservationDto;
 import reservation.repository.ReservationRepository;
 import reservation.service.ReservationService;
@@ -53,4 +54,11 @@ public class ReservationResource {
     public Uni<UserReservationDto> getUserWithMostReservations() {
         return service.findUserWithMostReservations();
     }
+
+    @GET
+    @Path("/user-most-refunded-tickets")
+    public Uni<UserReservationDto> findUserWithMostRefundedTickets() {
+        return service.findUserWithMostRefundedTickets();
+    }
+
 }
