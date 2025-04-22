@@ -23,5 +23,5 @@ public class CreateUserDto {
     private String passportNumber;
     private String dateOfBirth;
     private UserType userType;
-    private Double balance;
+    private double balance;
 }

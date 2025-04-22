@@ -5,6 +5,7 @@ import jakarta.annotation.security.PermitAll;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+import reservation.models.dto.UserRefundDto;
 import shared.PaginationQueryParams;
 import shared.mongoUtils.DeleteResult;
 import shared.mongoUtils.InsertResult;
@@ -38,5 +39,15 @@ public class UserResource {
     @Path("/{id}")
     public Uni<DeleteResult> deleteUser(@PathParam("id") String id) {
         return service.deleteUser(id);
+    }
+
+
+    @POST
+    @Path("/refund")
+    @PermitAll
+    public Uni<UserRefundDto> processRefundForUser(
+            @QueryParam("userId") String userId,
+            @QueryParam("flightNumber") String flightNumber) {
+        return service.processRefundForUser(userId, flightNumber);
     }
 }

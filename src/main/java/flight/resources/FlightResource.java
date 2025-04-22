@@ -2,9 +2,8 @@ package flight.resources;
 
 
 import flight.RouteQueryParams;
-import flight.models.dto.CreateFlightDto;
-import flight.models.dto.FlightDto;
-import flight.models.dto.StopoverDto;
+import flight.exceptions.FlightException;
+import flight.models.dto.*;
 import flight.service.FlightService;
 import io.smallrye.mutiny.Uni;
 import jakarta.annotation.security.PermitAll;
@@ -12,10 +11,12 @@ import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import shared.PaginationQueryParams;
 import shared.mongoUtils.DeleteResult;
 import shared.mongoUtils.InsertResult;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Path("/flights")
@@ -35,7 +36,7 @@ public class FlightResource {
 
 
     @POST
-    @RolesAllowed("admin")
+//    @RolesAllowed("admin")
     public Uni<InsertResult> addFlight(CreateFlightDto flightDto) {
         return flightService.addFlight(flightDto);
     }
@@ -70,6 +71,24 @@ public class FlightResource {
     @Path("/most-expensive")
     public Uni<List<FlightDto>> getMostExpensiveRoute(@BeanParam RouteQueryParams params) {
         return flightService.getMostExpensiveRoute(params.getDepartureAirportId(), params.getDestinationAirportId(), params.getDepartureDate());
+    }
+
+    @POST
+    @Path("/{flightId}/book")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<BookStatusFlightDto> bookFlight(@PathParam("flightId") String flightId) {
+        return flightService.checkAndUpdateFlightAvailability(flightId);
+    }
+
+    @GET
+    @Path("/two-way")
+    public Uni<List<TwoWayFlightDto>> getTwoWayFlights(
+            @QueryParam("departureAirportId") String departureAirportId,
+            @QueryParam("destinationAirportId") String destinationAirportId,
+            @QueryParam("departureDateTime") String departureDateTimeStr,
+            @QueryParam("returnDateTime") String returnDateTimeStr) {
+
+        return flightService.findTwoWayFlights(departureAirportId, destinationAirportId, departureDateTimeStr, returnDateTimeStr);
     }
 }
 

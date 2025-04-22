@@ -2,20 +2,17 @@ package ticket.models.dto;
 
 import baggage.models.BaggageEntity;
 import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.List;
 
 
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 @Getter
 @Setter
 public class CreateTicketDto {
-    private String reservationId;
     private String firstName;
     private String lastName;
     private String passportNumber;

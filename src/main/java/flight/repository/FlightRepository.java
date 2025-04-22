@@ -1,7 +1,9 @@
 package flight.repository;
 
 import com.mongodb.client.model.*;
+import flight.exceptions.FlightException;
 import flight.mappers.FlightMapper;
+import flight.models.dto.BookStatusFlightDto;
 import flight.models.dto.CreateFlightDto;
 import flight.models.dto.FlightDto;
 import io.quarkus.mongodb.reactive.ReactiveMongoCollection;
@@ -11,9 +13,15 @@ import jakarta.inject.Inject;
 import flight.models.FlightEntity;
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.bson.types.ObjectId;
 import shared.mongoUtils.DeleteResult;
 import shared.mongoUtils.InsertResult;
 import shared.mongoUtils.MongoUtil;
+import shared.mongoUtils.UpdateResult;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 
@@ -223,6 +231,99 @@ public class FlightRepository {
         return MongoUtil.insertOne(getCollection(), flight);
     }
 
+public Uni<BookStatusFlightDto> getCapacityAndBookedStatusByFlightNumber(String flightNumber) {
+    List<Bson> pipeline = Arrays.asList(
+            Aggregates.match(Filters.eq("flightNumber", flightNumber)),
+            Aggregates.project(Projections.fields(
+                    Projections.include("capacity", "booked"),
+                    Projections.excludeId()
+            ))
+    );
+
+    return getCollectionDto()
+            .aggregate(pipeline)
+            .collect()
+            .first()
+            .onItem().transform(result -> result);
+}
+
+
+
+
+    public Uni<UpdateResult> updateFlightCapacityAndBookedStatus(String flightNumber) {
+        Bson filter = Filters.eq("flightNumber", flightNumber);
+
+        return getCollectionDto()
+                .find(filter)
+                .collect()
+                .first()
+                .onItem().transformToUni(flight -> {
+                    if (flight == null) {
+                        return Uni.createFrom().failure(new FlightException("Flight not found", 404));
+                    }
+
+                    Bson update;
+                    if (flight.getCapacity() == 1) {
+                        update = Updates.combine(
+                                Updates.inc("capacity", -1),
+                                Updates.set("booked", true)
+                        );
+                    } else {
+                        update = Updates.inc("capacity", -1);
+                    }
+
+                    return getCollectionDto()
+                            .updateOne(filter, update)
+                            .onItem().transform(updateResult -> {
+                                return UpdateResult.fromCounts(updateResult.getMatchedCount(), updateResult.getModifiedCount());
+                            });
+                });
+    }
+
+
+    public Uni<UpdateResult> incrementCapacity(String flightNumber) {
+        Bson filter = Filters.eq("flightNumber", flightNumber);
+        Bson update = Updates.combine(
+                Updates.inc("capacity", 1),
+                Updates.set("booked", false)
+        );
+
+        return getCollection()
+                .updateOne(filter, update)
+                .onItem().transform(updateResult -> {
+                    if (updateResult.getModifiedCount() > 0) {
+                        return new shared.mongoUtils.UpdateResult(updateResult.getMatchedCount(), updateResult.getModifiedCount());
+                    } else {
+                        throw new FlightException("Failed to update flight capacity", 500);
+                    }
+                });
+    }
+
+
+    public Uni<List<FlightDto>> findOutboundFlights(String departureAirportId, String destinationAirportId, LocalDateTime departureDateTime) {
+        return getCollectionFlight().find(Filters.and(
+                Filters.eq("departureAirportId", departureAirportId),
+                Filters.eq("arrivalAirportId", destinationAirportId),
+                Filters.gte("departureTime", departureDateTime)
+        )).collect().asList();
+    }
+
+    public Uni<List<FlightDto>> findReturnFlights(String departureAirportId, String destinationAirportId, LocalDateTime returnDateTime) {
+        return getCollectionFlight().find(Filters.and(
+                Filters.eq("departureAirportId", destinationAirportId),
+                Filters.eq("arrivalAirportId", departureAirportId),
+                Filters.gte("departureTime", returnDateTime)
+        )).collect().asList();
+    }
+
+
+    private ReactiveMongoCollection<BookStatusFlightDto> getCollectionDto(){
+        return mongoService.getCollection("flights", BookStatusFlightDto.class);
+    }
+
+    private ReactiveMongoCollection<FlightDto> getCollectionFlight(){
+        return mongoService.getCollection("flights", FlightDto.class);
+    }
 
     private ReactiveMongoCollection<FlightEntity> getCollection(){
         return mongoService.getCollection("flights", FlightEntity.class);

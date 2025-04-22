@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import flight.enums.FlightType;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -18,12 +19,14 @@ public class FlightDto {
     private long totalTravelTime;
     private long totalWaitingTime;
     private String flightNumber;
-    private String departureTime;
-    private String arrivalTime;
+    private LocalDateTime departureTime;
+    private LocalDateTime arrivalTime;
     private FlightType flightType;
+    private String departureAirportId;
+    private String arrivalAirportId;
     private String status;
     private double price;
     private String airline;
     private Integer capacity;
-    private Boolean booked;
+    private boolean booked;
 }

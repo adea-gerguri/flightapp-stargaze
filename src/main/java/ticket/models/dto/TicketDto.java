@@ -16,7 +16,6 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TicketDto {
-    private String reservationId;
     private String firstName;
     private String lastName;
     private String passportNumber;

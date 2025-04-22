@@ -1,21 +1,17 @@
 package user.service;
 
-import airline.mappers.AirlineMapper;
-import airline.models.AirlineEntity;
-import airline.models.dto.CreateAirlineDTO;
-import airline.repository.AirlineRepository;
 import io.smallrye.mutiny.Uni;
-import io.vertx.ext.auth.User;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.validation.ConstraintViolationException;
-import jakarta.ws.rs.BadRequestException;
+import reservation.models.dto.UserRefundDto;
+import reservation.service.ReservationService;
 import shared.GlobalHibernateValidator;
 import shared.mongoUtils.DeleteResult;
 import shared.mongoUtils.InsertResult;
+import shared.mongoUtils.UpdateResult;
 import user.exceptions.UserException;
 import user.mappers.UserMapper;
-import user.models.UserEntity;
 import user.models.dto.CreateUserDto;
 import user.models.dto.UserDto;
 import user.repository.UserRepository;
@@ -26,6 +22,9 @@ import java.util.List;
 public class UserService {
     @Inject
     UserRepository userRepository;
+
+    @Inject
+    ReservationService reservationService;
 
     @Inject
     GlobalHibernateValidator validator;
@@ -52,6 +51,18 @@ public class UserService {
                     }
                     return deleteResult;
                 });
+    }
+
+    public Uni<UpdateResult> increaseBalance(String userId, double price) {
+        return userRepository.increaseBalance(userId, price);
+    }
+
+    public Uni<UserRefundDto> processRefundForUser(String userId, String flightNumber) {
+        return reservationService.processRefund(userId, flightNumber);
+    }
+
+    public Uni<UpdateResult> decreaseBalance(String userId, double amount) {
+        return userRepository.decreaseBalance(userId, amount);
     }
 }
 

@@ -1,27 +1,36 @@
 package flight.models.dto;
 
-import jakarta.validation.constraints.NotBlank;
+import flight.enums.FlightType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import flight.enums.FlightType;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 
-@AllArgsConstructor
-@NoArgsConstructor
 @Getter
 @Setter
-public class CreateFlightDto {
+@AllArgsConstructor
+@NoArgsConstructor
+public class TwoWayFlightDto {
+    private List<StopoverDto> fullPath;
+    private Duration totalTravelTime;
+    private Duration totalWaitingTime;
     private String flightNumber;
-    private String departureAirportId;
-    private String arrivalAirportId;
     private LocalDateTime departureTime;
     private LocalDateTime arrivalTime;
+    private FlightType flightType;
     private String status;
     private double price;
     private String airline;
     private Integer capacity;
     private boolean booked;
+    private double totalPrice;
+    private FlightInfoDto outboundFlight;
+    private FlightInfoDto returnFlight;
+
+
 }
+

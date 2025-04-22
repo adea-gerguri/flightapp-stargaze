@@ -48,10 +48,12 @@ public class MongoUtil {
     }
 
     public static <T> Uni<InsertResult> insertOne(ReactiveMongoCollection<T> collection, T entity) {
+        System.out.println(entity);
         return collection.insertOne(entity)
                 .onItemOrFailure()
                 .transformToUni((item, failure) -> {
                     if (failure != null) {
+                        failure.getMessage();
                         return Uni.createFrom().failure(new RuntimeException("Entity was not saved!"));
                     }
                     return Uni.createFrom().item(InsertResult.fromId(item.getInsertedId().toString()));

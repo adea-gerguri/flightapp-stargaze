@@ -8,6 +8,7 @@ import flight.enums.FlightType;
 import flight.enums.FlightStatus;
 import org.bson.types.ObjectId;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
@@ -19,13 +20,13 @@ public class FlightEntity {
     private String flightNumber;
     private String departureAirportId;
     private String arrivalAirportId;
-    private String departureTime;
-    private String arrivalTime;
+    private LocalDateTime departureTime;
+    private LocalDateTime arrivalTime;
     private FlightType flightType;
     private FlightStatus flightStatus;
     private double price;
     private String airline;
     private Integer capacity;
-    private Boolean booked;
+    private boolean booked;
 
 }

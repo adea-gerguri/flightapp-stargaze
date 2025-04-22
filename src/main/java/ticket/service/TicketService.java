@@ -49,4 +49,26 @@ public class TicketService {
                     return deleteResult;
                 });
     }
+
+    public Uni<TicketDto> getCheapestTicket() {
+        return repository.getCheapestTicket()
+                .onItem().transform(ticketDto -> {
+                    System.out.println("Cheapest Ticket: " + ticketDto);
+                    return ticketDto;
+                })
+                .onFailure().recoverWithItem(ex -> {
+                    return null;
+                });
+    }
+
+    public Uni<TicketDto> getMostExpensiveTicket() {
+        return repository.getMostExpensiveTicket()
+                .onItem().transform(ticketDto -> {
+                    System.out.println("Most Expensive Ticket: " + ticketDto);
+                    return ticketDto;
+                })
+                .onFailure().recoverWithItem(ex -> {
+                    return null;
+                });
+    }
 }

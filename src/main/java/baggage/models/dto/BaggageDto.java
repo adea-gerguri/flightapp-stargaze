@@ -14,9 +14,6 @@ import baggage.enums.BaggageType;
 public class BaggageDto {
     private String reservationId;
     private BaggageType baggageType;
-    private double length;
-    private double height;
-    private double width;
     private double weight;
     private double price;
 }

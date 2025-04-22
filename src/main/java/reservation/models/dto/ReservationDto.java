@@ -7,8 +7,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import baggage.models.BaggageEntity;
+import reservation.enums.ReservationStatus;
 import reservation.enums.SeatType;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Map;
 
@@ -17,8 +19,12 @@ import java.util.Map;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ReservationDto {
-    private Date reservationDate;
-    private Map<Integer, SeatType> seatSelection;
+    private String userId;
+    private String flightNumber;
+    private LocalDateTime reservationDate;
+    private SeatType seatSelection;
+    private ReservationStatus reservationStatus;
     private boolean specialAssistance;
-    private BaggageEntity baggageEntity;
+    private double price;
+    private BaggageEntity baggage;
 }

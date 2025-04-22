@@ -11,6 +11,7 @@ import shared.mongoUtils.InsertResult;
 import shared.mongoUtils.UpdateResult;
 import ticket.models.dto.CreateTicketDto;
 import ticket.models.TicketEntity;
+import ticket.models.dto.TicketDto;
 import ticket.service.TicketService;
 
 import java.util.List;
@@ -36,7 +37,19 @@ public class TicketResource {
         return service.deleteTicketById(id);
     }
 
+    @GET
+    @Path("/cheapest")
+    @PermitAll
+    public Uni<TicketDto> getCheapestTicket() {
+        return service.getCheapestTicket();
+    }
 
+    @GET
+    @Path("/most-expensive")
+    @PermitAll
+    public Uni<TicketDto> getMostExpensiveTicket() {
+        return service.getMostExpensiveTicket();
+    }
 
 
 

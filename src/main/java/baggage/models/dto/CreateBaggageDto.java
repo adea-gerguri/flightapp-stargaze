@@ -13,9 +13,6 @@ import baggage.enums.BaggageType;
 @Setter
 public class CreateBaggageDto {
     private BaggageType baggageType;
-    private double length;
-    private double height;
-    private double width;
     private double weight;
     private double price;
 }

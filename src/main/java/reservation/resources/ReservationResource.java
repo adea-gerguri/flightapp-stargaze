@@ -12,6 +12,7 @@ import jakarta.ws.rs.core.MediaType;
 import reservation.models.dto.CreateReservationDto;
 import reservation.models.dto.ReservationDto;
 import reservation.models.ReservationEntity;
+import reservation.models.dto.UserReservationDto;
 import reservation.repository.ReservationRepository;
 import reservation.service.ReservationService;
 import shared.PaginationQueryParams;
@@ -32,4 +33,24 @@ public class ReservationResource {
         return service.listReservations(params.getSkip(), params.getLimit());
     }
 
+    @POST
+    @PermitAll
+    public Uni<InsertResult> createReservation(CreateReservationDto createReservationDto) {
+        return service.createReservation(createReservationDto);
+    }
+
+    @GET
+    @Path("/find")
+    public Uni<ReservationDto> findByUserIdAndFlightNumber(
+            @QueryParam("userId") String userId,
+            @QueryParam("flightNumber") String flightNumber) {
+        return service.findByUserIdAndFlightNumber(userId, flightNumber);
+    }
+
+    @GET
+    @Path("/most-reservations")
+    @PermitAll
+    public Uni<UserReservationDto> getUserWithMostReservations() {
+        return service.findUserWithMostReservations();
+    }
 }
