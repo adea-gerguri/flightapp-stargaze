@@ -16,8 +16,14 @@ public class MongoTransactionManager {
     @Inject
     MongoDB mongoDB;
 
-    public Uni<ClientSession> execute() {
-        return mongoDB.mongoClient.startSession().invoke(ClientSession::startTransaction);
+    public Uni<MongoSession> execute() {
+        return mongoDB.mongoClient.startSession()
+                .flatMap(clientSession -> {
+                    clientSession.startTransaction();
+                    MongoSession session = new MongoSession();
+                    session.setSession(clientSession);
+                    return Uni.createFrom().item(session);
+                });
     }
 
     public Uni<Void> commit(Uni<ClientSession> sessionUni) {
