@@ -31,12 +31,12 @@ public class FlightResource {
     @PermitAll
     @Path("/lowest")
     public Uni<List<FlightDto>> listLowestPrice(@BeanParam PaginationQueryParams params){
-        return flightService.listLowestPrice(PaginationQueryParams params);
+        return flightService.listLowestPrice(params);
     }
 
 
     @POST
-//    @RolesAllowed("admin")
+    @RolesAllowed("admin")
     public Uni<InsertResult> addFlight(CreateFlightDto flightDto) {
         return flightService.addFlight(flightDto);
     }

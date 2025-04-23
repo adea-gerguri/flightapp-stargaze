@@ -13,7 +13,6 @@ quarkus:
         quarkus:quarkus-mongodb-client": META-INF/services/com.mongodb.spi.dns.DnsClientProvider
   mongodb:
     connection-string: '${QUARKUS_MONGODB_CONNECTION_STRING}'
-    socketTimeout: 20
   security:
     users:
       embedded:
