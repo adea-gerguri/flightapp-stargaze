@@ -1,6 +1,7 @@
 package baggage.models.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,8 +13,8 @@ import baggage.enums.BaggageType;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BaggageDto {
-    private String reservationId;
-    private BaggageType baggageType;
-    private double weight;
-    private double price;
+    @NotNull private String reservationId;
+    @NotNull private BaggageType baggageType;
+    @NotNull private double weight;
+    @NotNull private double price;
 }

@@ -1,6 +1,7 @@
 package ticket.models.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,10 +17,11 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TicketDto {
-    private String firstName;
-    private String lastName;
-    private String passportNumber;
-    private List<BaggageEntity> baggageEntityList;
-    private double price;
+    private String userId;
+    @NotNull
+    @NotBlank
+    private String flightNumber;
+    private String reservationId;
+    @NotNull private double price;
 
 }

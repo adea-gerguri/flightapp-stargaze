@@ -33,15 +33,15 @@ public class BaggageResource {
     @Path("/weight")
     @PermitAll
     @Produces(MediaType.APPLICATION_JSON)
-    public Uni<List<BaggageWeightDto>> getBaggageGroupedByType(@BeanParam PaginationQueryParams params) {
-        return baggageService.getBaggageGroupedByType(params.getSkip(), params.getLimit(), params.getSort());
+    public Uni<List<BaggageWeightDto>> getBaggageGroupedByType(@BeanParam PaginationQueryParams paginationQueryParams) {
+        return baggageService.getBaggageGroupedByType(paginationQueryParams);
     }
 
     @GET
     @Path("/price")
     @PermitAll
     @Produces(MediaType.APPLICATION_JSON)
-    public Uni<List<BaggagePriceDto>> getBaggageSummary(@BeanParam PaginationQueryParams params) {
-        return baggageService.getBaggageSummaryByReservationId(params.getSkip(), params.getLimit(), params.getSort());
+    public Uni<List<BaggagePriceDto>> getBaggageSummary(@BeanParam PaginationQueryParams paginationQueryParams) {
+        return baggageService.getBaggageSummaryByReservationId(paginationQueryParams);
     }
 }

@@ -1,5 +1,6 @@
 package baggage.models.dto;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,8 +11,8 @@ import lombok.Setter;
 @Getter
 @Setter
 public class BaggageWeightDto {
-    private String baggageType;
-    private double totalWeight;
-    private int count;
+    @NotNull private String baggageType;
+    @NotNull private double totalWeight;
+    @NotNull private int count;
 }
 

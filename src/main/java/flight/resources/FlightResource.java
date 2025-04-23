@@ -51,8 +51,8 @@ public class FlightResource {
 
     @GET
     @Path("/fastest")
-    public Uni<List<FlightDto>> getFastestRoute(@BeanParam RouteQueryParams params) {
-        return flightService.getFastestRoute(params.getDepartureAirportId(), params.getDestinationAirportId(), params.getDepartureDate());
+    public Uni<List<FlightDto>> getFastestRoute(@BeanParam RouteQueryParams routeQueryParams) {
+        return flightService.getFastestRoute(routeQueryParams);
     }
 
     @GET
@@ -73,12 +73,6 @@ public class FlightResource {
         return flightService.getMostExpensiveRoute(params.getDepartureAirportId(), params.getDestinationAirportId(), params.getDepartureDate());
     }
 
-    @POST
-    @Path("/{flightId}/book")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Uni<BookStatusFlightDto> bookFlight(@PathParam("flightId") String flightId) {
-        return flightService.checkAndUpdateFlightAvailability(flightId);
-    }
 
     @GET
     @Path("/two-way")

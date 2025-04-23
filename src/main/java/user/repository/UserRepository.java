@@ -4,11 +4,14 @@ import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Projections;
 import com.mongodb.client.model.Updates;
+import com.mongodb.reactivestreams.client.ClientSession;
 import io.quarkus.mongodb.reactive.ReactiveMongoCollection;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.bson.Document;
 import org.bson.conversions.Bson;
+import shared.PaginationQueryParams;
 import shared.mongoUtils.DeleteResult;
 import shared.mongoUtils.InsertResult;
 import shared.mongoUtils.MongoUtil;
@@ -27,11 +30,11 @@ public class UserRepository {
     @Inject
     MongoUtil mongoService;
 
-    public Uni<List<UserDto>> listUsers(int skip, int limit) {
+    public Uni<List<UserDto>> listUsers(PaginationQueryParams paginationQueryParams) {
         List<Bson> pipeline = List.of(
                 Aggregates.sort(ascending("name")),
-                Aggregates.skip(skip),
-                Aggregates.limit(limit),
+                Aggregates.skip(paginationQueryParams.getSkip()),
+                Aggregates.limit(paginationQueryParams.getLimit()),
                 Aggregates.project(Projections.fields(
                         Projections.include("id", "name", "email", "phoneNumber")
                 ))
@@ -50,43 +53,18 @@ public class UserRepository {
     }
 
 
-    public Uni<UpdateResult> decreaseBalance(String userId, double price) {
-        Bson filter = Filters.eq("id", userId);
+    public Uni<UpdateResult> decreaseBalance(String userId, double price, ClientSession clientSession) {
         Bson update = Updates.inc("balance", -price);
-
-        return getCollection()
-                .updateOne(filter, update)
-                .onItem().transform(updateResult -> {
-                    if (updateResult.getModifiedCount() > 0) {
-                        return new shared.mongoUtils.UpdateResult(updateResult.getMatchedCount(), updateResult.getModifiedCount());
-                    } else {
-                        throw new UserException("Failed to update user balance", 500);
-                    }
-                });
+        return MongoUtil.updateOne(getCollection(), userId, update, clientSession);
     }
 
-    public Uni<UpdateResult> increaseBalance(String userId, double price) {
-        Bson filter = Filters.eq("id", userId);
+    public Uni<UpdateResult> increaseBalance(String userId, double price, ClientSession clientSession) {
         Bson update = Updates.inc("balance", price);
-
-        return getCollection()
-                .updateOne(filter, update)
-                .onItem().transform(updateResult -> {
-                    if (updateResult.getModifiedCount() > 0) {
-                        return new shared.mongoUtils.UpdateResult(updateResult.getMatchedCount(), updateResult.getModifiedCount());
-                    } else {
-                        throw new UserException("Failed to update user balance", 500);
-                    }
-                });
+        return MongoUtil.updateOne(getCollection(), userId, update, clientSession);
     }
 
 
     private ReactiveMongoCollection<UserEntity> getCollection() {
         return mongoService.getCollection("users",UserEntity.class);
     }
-
-
-
-
-
 }

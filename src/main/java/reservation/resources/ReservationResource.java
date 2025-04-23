@@ -30,8 +30,8 @@ public class ReservationResource {
 
     @GET
     @PermitAll
-    public Uni<List<ReservationEntity>> listReservations(@BeanParam PaginationQueryParams params) {
-        return service.listReservations(params.getSkip(), params.getLimit());
+    public Uni<List<ReservationEntity>> listReservations(@BeanParam PaginationQueryParams paginationQueryParams) {
+        return service.listReservations(paginationQueryParams);
     }
 
     @POST
@@ -51,13 +51,13 @@ public class ReservationResource {
     @GET
     @Path("/most-reservations")
     @PermitAll
-    public Uni<UserReservationDto> getUserWithMostReservations() {
+    public Uni<List<UserReservationDto>> getUserWithMostReservations() {
         return service.findUserWithMostReservations();
     }
 
     @GET
     @Path("/user-most-refunded-tickets")
-    public Uni<UserReservationDto> findUserWithMostRefundedTickets() {
+    public Uni<List<UserReservationDto>> findUserWithMostRefundedTickets() {
         return service.findUserWithMostRefundedTickets();
     }
 

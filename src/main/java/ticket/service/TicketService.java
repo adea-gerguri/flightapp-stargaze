@@ -1,11 +1,14 @@
 package ticket.service;
 
+import com.mongodb.reactivestreams.client.ClientSession;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.client.Client;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import shared.GlobalHibernateValidator;
 import shared.mongoUtils.DeleteResult;
 import shared.mongoUtils.InsertResult;
@@ -31,8 +34,6 @@ public class TicketService {
 
     public Uni<InsertResult> addTicket(CreateTicketDto ticketDto) {
         return validator.validate(ticketDto)
-                .onFailure(ConstraintViolationException.class)
-                .transform(e->new TicketException(e.getMessage(), 400))
                 .flatMap(validatedDto ->{
                     return repository.addTicket(TicketMapper.toTicket(validatedDto));
                 });
@@ -42,33 +43,34 @@ public class TicketService {
 
         return repository.deleteTicket(id)
                 .onItem()
-                .transform(deleteResult->{
-                    if(deleteResult.getDeletedCount() == 0){
-                        throw new TicketException("Ticket not found", 404);
-                    }
+                .transform(deleteResult -> {
                     return deleteResult;
                 });
     }
 
-    public Uni<TicketDto> getCheapestTicket() {
+    public Uni<List<TicketDto>> getCheapestTicket() {
         return repository.getCheapestTicket()
                 .onItem().transform(ticketDto -> {
-                    System.out.println("Cheapest Ticket: " + ticketDto);
                     return ticketDto;
-                })
-                .onFailure().recoverWithItem(ex -> {
-                    return null;
                 });
     }
 
-    public Uni<TicketDto> getMostExpensiveTicket() {
+    public Uni<List<TicketDto>> getMostExpensiveTicket() {
         return repository.getMostExpensiveTicket()
                 .onItem().transform(ticketDto -> {
-                    System.out.println("Most Expensive Ticket: " + ticketDto);
                     return ticketDto;
-                })
-                .onFailure().recoverWithItem(ex -> {
-                    return null;
                 });
+    }
+
+    public Uni<TicketEntity> findAvailableTicketByFlightNumber(String flightNumber, ClientSession clientSession) {
+        return repository.findAvailableTicketByFlightNumber(flightNumber, clientSession);
+    }
+
+    public Uni<TicketEntity> findTicketByFlightNumber(String flightNumber, String userId, ClientSession clientSession){
+        return repository.findTicketByFlightNumber(flightNumber, userId, clientSession);
+    }
+
+    public Uni<UpdateResult> updateTicket(String ticketId, String userId, String reservationId, double totalPrice, ClientSession clientSession ) {
+        return repository.updateTicket(ticketId, userId, reservationId, totalPrice, clientSession);
     }
 }

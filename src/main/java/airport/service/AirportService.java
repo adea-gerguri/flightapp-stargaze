@@ -16,6 +16,7 @@ import jakarta.ws.rs.BadRequestException;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import shared.GlobalHibernateValidator;
+import shared.PaginationQueryParams;
 import shared.mongoUtils.DeleteResult;
 import shared.mongoUtils.InsertResult;
 import shared.mongoUtils.UpdateResult;
@@ -36,8 +37,6 @@ public class AirportService {
 
     public Uni<InsertResult> addAirport(CreateAirportDto airportDto) {
         return validator.validate(airportDto)
-                .onFailure()
-                .transform(e->new AirlineException(e.getMessage(), 400))
                 .flatMap(validatedDto ->{
                     return repository.add(AirportMapper.toAirport(validatedDto));
                 });
@@ -47,23 +46,16 @@ public class AirportService {
          return repository.delete(id)
                  .onItem()
                 .transform(deleteResult->{
-                    if(deleteResult.getDeletedCount() == 0){
-                        throw new AirlineException("Airline not found", 404);
-                    }
                     return deleteResult;
                 });
     }
 
-    public Uni<List<AirportGroupByCountryDto>> groupAirportsByCountry(int skip, int limit, int sort) {
-        return repository.groupAirportsByCountry(skip, limit, sort)
-                .onFailure()
-                .transform(e->new AirlineException(e.getMessage(),404));
+    public Uni<List<AirportGroupByCountryDto>> groupAirportsByCountry(PaginationQueryParams paginationQueryParams) {
+        return repository.groupAirportsByCountry(paginationQueryParams);
     }
 
-    public Uni<List<AirportGroupByCityDto>> groupAirportsByCity(int skip, int limit, int sort){
-        return repository.groupAirportsByCity(skip,limit,sort)
-                .onFailure()
-                .transform(e->new AirlineException(e.getMessage(),404));
+    public Uni<List<AirportGroupByCityDto>> groupAirportsByCity(PaginationQueryParams paginationQueryParams) {
+        return repository.groupAirportsByCity(paginationQueryParams);
     }
 
 }

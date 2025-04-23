@@ -3,6 +3,7 @@ package flight.models.dto;
 import flight.enums.FlightType;
 import flight.models.FlightEntity;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,11 +17,11 @@ import java.util.List;
 @Getter
 @Setter
 public class StopoverDto {
-    private String departureAirportId;
-    private String arrivalAirportId;
-    private LocalDateTime departureTime;
-    private LocalDateTime arrivalTime;
-    private double price;
+    @NotNull private String departureAirportId;
+    @NotNull private String arrivalAirportId;
+    @NotNull private LocalDateTime departureTime;
+    @NotNull private LocalDateTime arrivalTime;
+    @NotNull private double price;
 }
 
 

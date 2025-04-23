@@ -1,6 +1,7 @@
 package flight.models.dto;
 
 import io.quarkus.arc.All;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,11 +14,11 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class FlightInfoDto {
-    private String departureAirportId;
-    private String arrivalAirportId;
-    private LocalDateTime departureTime;
-    private LocalDateTime arrivalTime;
-    private Double price;
+    @NotNull private String departureAirportId;
+    @NotNull private String arrivalAirportId;
+    @NotNull private LocalDateTime departureTime;
+    @NotNull private LocalDateTime arrivalTime;
+    @NotNull private Double price;
     private FlightInfoDto outboundFlight;
     private FlightInfoDto returnFlight;
     private double totalPrice;

@@ -2,6 +2,7 @@ package reservation.models.dto;
 
 import jakarta.json.bind.annotation.JsonbDateFormat;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,12 +20,12 @@ import java.util.Map;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ReservationDto {
-    private String userId;
-    private String flightNumber;
-    private LocalDateTime reservationDate;
-    private SeatType seatSelection;
-    private ReservationStatus reservationStatus;
-    private boolean specialAssistance;
-    private double price;
+    @NotNull private String userId;
+    @NotNull private String flightNumber;
+    @NotNull private LocalDateTime reservationDate;
+    @NotNull  private SeatType seatSelection;
+    @NotNull private ReservationStatus reservationStatus;
+    @NotNull private boolean specialAssistance;
+    @NotNull private double price;
     private BaggageEntity baggage;
 }

@@ -8,11 +8,9 @@ public class TicketMapper {
     public static TicketEntity toTicket(CreateTicketDto ticketDto){
         if(ticketDto!=null){
             TicketEntity ticketEntity = new TicketEntity();
-            ticketEntity.setFirstName(ticketDto.getFirstName());
-            ticketEntity.setLastName(ticketDto.getLastName());
-            ticketEntity.setBaggageEntityList(ticketDto.getBaggageEntityList());
+            ticketEntity.setReservationId(ticketDto.getReservationId());
+            ticketEntity.setFlightNumber(ticketDto.getFlightNumber());
             ticketEntity.setPrice(ticketDto.getPrice());
-            ticketEntity.setPassportNumber(ticketDto.getPassportNumber());
             return ticketEntity;
         }
         return null;
@@ -20,11 +18,10 @@ public class TicketMapper {
     public static CreateTicketDto toCreateTicketDto(TicketEntity ticketEntity){
         if(ticketEntity !=null){
             CreateTicketDto ticketDto = new CreateTicketDto();
-            ticketDto.setFirstName(ticketEntity.getFirstName());
-            ticketDto.setLastName(ticketEntity.getLastName());
-            ticketDto.setBaggageEntityList(ticketEntity.getBaggageEntityList());
             ticketDto.setPrice(ticketEntity.getPrice());
-            ticketDto.setPassportNumber(ticketEntity.getPassportNumber());
+            ticketDto.setReservationId(ticketEntity.getReservationId());
+            ticketDto.setFlightNumber(ticketEntity.getFlightNumber());
+            ticketDto.setUserId(ticketEntity.getUserId());
             return ticketDto;
         }
         return null;
@@ -32,11 +29,10 @@ public class TicketMapper {
     public static TicketDto toTicketDto(TicketEntity ticketEntity){
         if(ticketEntity !=null){
             TicketDto ticketDto = new TicketDto();
-            ticketDto.setFirstName(ticketEntity.getFirstName());
-            ticketDto.setLastName(ticketEntity.getLastName());
-            ticketDto.setBaggageEntityList(ticketEntity.getBaggageEntityList());
             ticketDto.setPrice(ticketEntity.getPrice());
-            ticketDto.setPassportNumber(ticketEntity.getPassportNumber());
+            ticketDto.setReservationId(ticketEntity.getReservationId());
+            ticketDto.setFlightNumber(ticketEntity.getFlightNumber());
+            ticketDto.setUserId(ticketEntity.getUserId());
             return ticketDto;
         }
         return null;

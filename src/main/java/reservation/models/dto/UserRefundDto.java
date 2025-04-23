@@ -1,5 +1,6 @@
 package reservation.models.dto;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import reservation.enums.ReservationStatus;
 
@@ -9,8 +10,8 @@ import reservation.enums.ReservationStatus;
 @Getter
 @Setter
 public class UserRefundDto {
-    private String userId;
-    private long count;
-    private long refundCount;
-    private ReservationStatus reservationStatus;
+    @NotNull private String userId;
+    @NotNull private long count;
+    @NotNull private long refundCount;
+    @NotNull  private ReservationStatus reservationStatus;
 }

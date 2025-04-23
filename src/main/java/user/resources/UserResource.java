@@ -24,8 +24,8 @@ public class UserResource {
 
     @GET
     @PermitAll
-    public Uni<List<UserDto>> listUsers(@BeanParam PaginationQueryParams params) {
-        return service.listUsers(params.getSkip(), params.getLimit());
+    public Uni<List<UserDto>> listUsers(@BeanParam PaginationQueryParams paginationQueryParams) {
+        return service.listUsers(paginationQueryParams);
     }
 
     @POST

@@ -1,5 +1,6 @@
 package user.service;
 
+import com.mongodb.reactivestreams.client.ClientSession;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -7,6 +8,7 @@ import jakarta.validation.ConstraintViolationException;
 import reservation.models.dto.UserRefundDto;
 import reservation.service.ReservationService;
 import shared.GlobalHibernateValidator;
+import shared.PaginationQueryParams;
 import shared.mongoUtils.DeleteResult;
 import shared.mongoUtils.InsertResult;
 import shared.mongoUtils.UpdateResult;
@@ -29,14 +31,12 @@ public class UserService {
     @Inject
     GlobalHibernateValidator validator;
 
-    public Uni<List<UserDto>> listUsers(int skip, int limit) {
-        return userRepository.listUsers(skip,limit);
+    public Uni<List<UserDto>> listUsers(PaginationQueryParams paginationQueryParams) {
+        return userRepository.listUsers(paginationQueryParams);
     }
 
     public Uni<InsertResult> addUser(CreateUserDto userDto) {
         return validator.validate(userDto)
-                .onFailure(ConstraintViolationException.class)
-                .transform(e->new UserException(e.getMessage(),400))
                 .flatMap(validatedDto->{
                     return userRepository.addUser(UserMapper.toUser(validatedDto));
                 });
@@ -46,23 +46,20 @@ public class UserService {
         return userRepository.deleteUser(id)
                 .onItem()
                 .transform(deleteResult->{
-                    if(deleteResult.getDeletedCount()==0){
-                        throw new UserException("User not found",404);
-                    }
                     return deleteResult;
                 });
     }
 
-    public Uni<UpdateResult> increaseBalance(String userId, double price) {
-        return userRepository.increaseBalance(userId, price);
+    public Uni<UpdateResult> increaseBalance(String userId, double price, ClientSession clientSession) {
+        return userRepository.increaseBalance(userId, price, clientSession);
     }
 
     public Uni<UserRefundDto> processRefundForUser(String userId, String flightNumber) {
         return reservationService.processRefund(userId, flightNumber);
     }
 
-    public Uni<UpdateResult> decreaseBalance(String userId, double amount) {
-        return userRepository.decreaseBalance(userId, amount);
+    public Uni<UpdateResult> decreaseBalance(String userId, double amount, ClientSession clientSession) {
+        return userRepository.decreaseBalance(userId, amount, clientSession);
     }
 }
 

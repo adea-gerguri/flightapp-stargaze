@@ -1,6 +1,7 @@
 package reviews.models.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,6 +13,6 @@ import lombok.Setter;
 @Setter
 public class LowestRatedReviewDto {
     private String message;
-    private int rating;
-    private String reviewDate;
+    @NotNull private int rating;
+    @NotNull private String reviewDate;
 }

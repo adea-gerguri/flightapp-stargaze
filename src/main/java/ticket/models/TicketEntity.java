@@ -15,9 +15,8 @@ import java.util.List;
 @AllArgsConstructor
 public class TicketEntity {
     private String id;
-    private String firstName;
-    private String lastName;
-    private String passportNumber;
-    private List<BaggageEntity> baggageEntityList;
+    private String userId;
+    private String reservationId;
+    private String flightNumber;
     private double price;
 }

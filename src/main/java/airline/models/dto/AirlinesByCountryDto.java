@@ -1,6 +1,7 @@
 package airline.models.dto;
 
 
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,6 +12,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class AirlinesByCountryDto {
-    private String country;
-    private int planeCount;
+    @NotNull private String country;
+    @NotNull private int planeCount;
 }

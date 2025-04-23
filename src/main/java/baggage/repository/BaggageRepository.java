@@ -13,9 +13,11 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import baggage.models.BaggageEntity;
 import org.bson.conversions.Bson;
+import shared.PaginationQueryParams;
 import shared.mongoUtils.InsertResult;
 import shared.mongoUtils.MongoUtil;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @ApplicationScoped
@@ -23,55 +25,39 @@ public class BaggageRepository {
     @Inject
     MongoUtil mongoService;
 
-    private Bson sorting;
-
     public Uni<InsertResult> addBaggage(BaggageEntity baggage){
        return MongoUtil.insertOne(getCollection(), baggage);
     }
 
-    public Uni<List<BaggageWeightDto>> groupByBaggageType(int skip, int limit, int sort) {
-        if(sort==1){
-            sorting = Sorts.ascending("totalWeight");
-        }else{
-            sorting = Sorts.descending("totalWeight");
-        }
-        List<Bson> pipeline = List.of(
-                Aggregates.group("$baggageType",
-                        Accumulators.sum("totalWeight", "$weight"),
-                        Accumulators.sum("count", 1)
-                ),
-                Aggregates.project(Projections.fields(
-                        Projections.computed("baggageType", "$_id"),
-                        Projections.include("totalWeight", "count")
-                )),
-                Aggregates.sort(sorting),
-                Aggregates.skip(skip),
-                Aggregates.limit(limit)
-        );
-
+    public Uni<List<BaggageWeightDto>> groupByBaggageType(PaginationQueryParams paginationQueryParams) {
+        List<Bson> pipeline = new ArrayList<>();
+        pipeline.add(Aggregates.group("$baggageType",
+                        Accumulators.sum("totalWeight","$weight"),
+                        Accumulators.sum("count",1)
+                ));
+        pipeline.add(Aggregates.project(Projections.fields(
+                Projections.computed("baggageType","$_id"),
+                Projections.include("totalWeight", "count")
+        )));
+        pipeline.addAll(MongoUtil.listWithPagination(paginationQueryParams, "totalWeight"));
         return MongoUtil.aggregate(getCollection(), pipeline, BaggageWeightDto.class);
     }
 
-    public Uni<List<BaggagePriceDto>> groupByReservationIdAndTotalPrice(int skip, int limit, int sort) {
-        if(sort ==1){
-            sorting = Sorts.ascending("totalPrice");
-        } else{
-            sorting = Sorts.descending("totalPrice");
-        }
-        List<Bson> pipeline = List.of(
-                Aggregates.group("$reservationId",
-                        Accumulators.sum("totalPrice", "$price"),
-                        Accumulators.sum("count", 1)
-                ),
-                Aggregates.project(Projections.fields(
-                        Projections.computed("baggageType", "$_id"),
+    public Uni<List<BaggagePriceDto>> groupByReservationIdAndTotalPrice(PaginationQueryParams paginationQueryParams) {
+        List<Bson> pipeline = new ArrayList<>();
+        pipeline.add(Aggregates.group("$reservationId",
+                Accumulators.sum("totalPrice", "$price"),
+                Accumulators.sum("count",1)
+                ));
+        pipeline.add(Aggregates.project(Projections.fields(
+                Projections.fields(
+                        Projections.computed("baggageType","$_id"),
                         Projections.include("totalPrice", "count")
-                )),
-                Aggregates.sort(sorting),
-                Aggregates.skip(skip),
-                Aggregates.limit(limit)
-        );
-        return MongoUtil.aggregate(mongoService.getCollection("baggages", BaggageEntity.class), pipeline, BaggagePriceDto.class);
+                )
+        )));
+        pipeline.addAll(MongoUtil.listWithPagination(paginationQueryParams, "totalPrice"));
+
+        return MongoUtil.aggregate(getCollection(), pipeline, BaggagePriceDto.class);
     }
 
 

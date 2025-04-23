@@ -9,6 +9,7 @@ import org.bson.conversions.Bson;
 import reviews.models.ReviewEntity;
 import reviews.models.dto.HighestRatedReviewDto;
 import reviews.models.dto.LowestRatedReviewDto;
+import shared.PaginationQueryParams;
 import shared.mongoUtils.MongoUtil;
 import shared.mongoUtils.InsertResult;
 import java.util.List;
@@ -24,18 +25,15 @@ public class ReviewRepository {
     @Inject
     MongoUtil mongoUtil;
 
-    public Uni<List<ReviewEntity>> listReviews() {
-        return getCollection().find(new FindOptions()).collect().asList();
-    }
     public Uni<InsertResult> add(ReviewEntity review){
         return MongoUtil.insertOne(getCollection(), review);
     }
 
-    public Uni<List<HighestRatedReviewDto>> highestRated(int skip, int limit) {
+    public Uni<List<HighestRatedReviewDto>> highestRated(PaginationQueryParams paginationQueryParams) {
         List<Bson> pipeline = List.of(
                 sort(descending("rating")),
-                skip(skip),
-                limit(limit),
+                skip(paginationQueryParams.getSkip()),
+                limit(paginationQueryParams.getLimit()),
                 project(fields(
                         computed("id", "$_id"),
                         include("rating", "reviewDate", "message")
@@ -44,11 +42,11 @@ public class ReviewRepository {
         return MongoUtil.aggregate(getCollection(), pipeline, HighestRatedReviewDto.class);
     }
 
-    public Uni<List<LowestRatedReviewDto>> lowestRated(int skip, int limit) {
+    public Uni<List<LowestRatedReviewDto>> lowestRated(PaginationQueryParams paginationQueryParams) {
         List<Bson> pipeline = List.of(
                 sort(ascending("rating")),
-                skip(skip),
-                limit(limit),
+                skip(paginationQueryParams.getSkip()),
+                limit(paginationQueryParams.getLimit()),
                 project(fields(
                         computed("id", "$_id"),
                         include("rating", "reviewDate", "message")

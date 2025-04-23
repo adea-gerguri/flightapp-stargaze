@@ -2,6 +2,7 @@ package flight.models.dto;
 
 import flight.enums.FlightStatus;
 import flight.enums.FlightType;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 
@@ -11,7 +12,7 @@ import lombok.*;
 @Getter
 @Setter
 public class BookStatusFlightDto {
-    private String flightNumber;
-    private Integer capacity;
-    private boolean booked;
+    @NotNull private String flightNumber;
+    @NotNull private int capacity;
+    @NotNull private boolean booked;
 }

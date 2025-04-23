@@ -35,29 +35,24 @@ public class ReviewsResource {
     @Inject
     ReviewService service;
 
-    @GET
-    @PermitAll
-    public Uni<List<ReviewEntity>> listReviews() {
-        return service.listReviews();
-    }
 
     @POST
     @RolesAllowed("admin")
-    public Uni<InsertResult> addReview(@Valid CreateReviewDto reviewDto) {
+    public Uni<InsertResult> addReview(CreateReviewDto reviewDto) {
         return service.addReview(reviewDto);
     }
 
     @GET
     @Path("/best")
     @PermitAll
-    public Uni<List<HighestRatedReviewDto>> listHighestRated(@BeanParam PaginationQueryParams params){
-        return service.listHighestRated(params.getSkip(), params.getLimit());
+    public Uni<List<HighestRatedReviewDto>> listHighestRated(@BeanParam PaginationQueryParams paginationQueryParams){
+        return service.listHighestRated(paginationQueryParams);
     }
 
     @GET
     @Path("/worst")
-    public Uni<List<LowestRatedReviewDto>> listLowestRated(@BeanParam PaginationQueryParams params){
-        return service.listLowestRated(params.getSkip(), params.getLimit());
+    public Uni<List<LowestRatedReviewDto>> listLowestRated(@BeanParam PaginationQueryParams paginationQueryParams){
+        return service.listLowestRated(paginationQueryParams);
     }
 
 }

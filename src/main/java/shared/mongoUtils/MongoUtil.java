@@ -1,6 +1,9 @@
 package shared.mongoUtils;
 
+import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Sorts;
+import com.mongodb.reactivestreams.client.ClientSession;
 import io.quarkus.mongodb.FindOptions;
 import io.quarkus.mongodb.reactive.ReactiveMongoCollection;
 import io.quarkus.runtime.ExecutorRecorder;
@@ -8,11 +11,16 @@ import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.client.Client;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
+import org.hibernate.validator.constraints.Range;
 import org.hibernate.validator.spi.messageinterpolation.LocaleResolver;
+import shared.PaginationQueryParams;
+import shared.exceptions.DocumentNotFound;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.mongodb.client.model.Sorts.ascending;
@@ -22,6 +30,7 @@ import static com.mongodb.client.model.Sorts.ascending;
 public class MongoUtil {
     @Inject
     MongoDB mongoDB;
+
 
 
     public <T> ReactiveMongoCollection<T> getCollection(String collection, Class<T> type){
@@ -44,35 +53,95 @@ public class MongoUtil {
                 .toUni()
                 .onItem()
                 .ifNull()
-                .failWith(new NotFoundException());
+                .failWith(new DocumentNotFound("Document not found",404));
     }
+
+    public static List<Bson> listWithPagination(PaginationQueryParams paginationQueryParams, String sortByField) {
+        List<Bson> pipeline = new ArrayList<>();
+
+        if (paginationQueryParams.getSort() == 1) {
+            pipeline.add(Aggregates.sort(Sorts.ascending(sortByField)));
+        } else {
+            pipeline.add(Aggregates.sort(Sorts.descending(sortByField)));
+        }
+
+        pipeline.add(Aggregates.skip(paginationQueryParams.getSkip()));
+        pipeline.add(Aggregates.limit(paginationQueryParams.getLimit()));
+
+        return pipeline;
+    }
+
+
 
     public static <T> Uni<InsertResult> insertOne(ReactiveMongoCollection<T> collection, T entity) {
-        System.out.println(entity);
         return collection.insertOne(entity)
-                .onItemOrFailure()
-                .transformToUni((item, failure) -> {
-                    if (failure != null) {
-                        failure.getMessage();
-                        return Uni.createFrom().failure(new RuntimeException("Entity was not saved!"));
-                    }
-                    return Uni.createFrom().item(InsertResult.fromId(item.getInsertedId().toString()));
+                .onItem()
+                .transformToUni(item->{
+                    return Uni.createFrom().item(InsertResult.fromId(item.getInsertedId().asString().getValue()));
+                });
+    }
+    public static <T> Uni<InsertResult> insertOne(ReactiveMongoCollection<T> collection, T entity, ClientSession clientSession) {
+        return collection.insertOne(clientSession, entity)
+                .onItem()
+                .transformToUni(item->{
+                    return Uni.createFrom().item(InsertResult.fromId(item.getInsertedId().asString().getValue()));
                 });
     }
 
-    public static <T> Uni<UpdateResult> updateOne(ReactiveMongoCollection<T> collection, String id, Document update) {
-        Document filter = new Document("_id", id);
-        return collection.updateOne(filter, new Document("$set", update))
+    public static <T> Uni<UpdateResult> updateOne(ReactiveMongoCollection<T> collection, String id, Bson update) {
+
+        Bson filters = Filters.eq("_id",id);
+        return collection.updateOne(filters, update)
                 .onItem()
-                .transform(mongoResult -> {
-                    if (mongoResult.getMatchedCount() == 0) {
-                        throw new NotFoundException("Document not found for update");
-                    }
-                    return UpdateResult.fromCounts(
-                            mongoResult.getMatchedCount(),
-                            mongoResult.getModifiedCount()
-                    );
-                });
+                .transform(mongoResult->UpdateResult.fromCounts(
+                        mongoResult.getMatchedCount(),
+                        mongoResult.getModifiedCount()
+                ));
+    }
+    public static <T> Uni<UpdateResult> updateOne(ReactiveMongoCollection<T> collection, String id, Bson update, ClientSession clientSession) {
+
+        Bson filters = Filters.eq("_id",id);
+        return collection.updateOne(clientSession, filters, update)
+                .onItem()
+                .transform(mongoResult->UpdateResult.fromCounts(
+                        mongoResult.getMatchedCount(),
+                        mongoResult.getModifiedCount()
+                ));
+    }
+    public static <T> Uni<T> findOneByFilter(ReactiveMongoCollection<T> collection, Bson filter) {
+        return collection.find(filter)
+                .collect().first()
+                .onItem()
+                .ifNull()
+                .failWith(new DocumentNotFound("Document not found",404));
+    }
+    public static <T> Uni<T> findOneByFilter(ReactiveMongoCollection<T> collection, Bson filter, ClientSession clientSession) {
+        return collection.find(clientSession, filter)
+                .collect().first()
+                .onItem()
+                .ifNull()
+                .failWith(new DocumentNotFound("Document not found",404));
+    }
+
+    public static <T> Uni<UpdateResult> updateOne(ReactiveMongoCollection<T> collection, Bson filter, Bson update) {
+        return collection.updateOne(filter, update)
+                .onItem()
+                .transform(mongoResult -> UpdateResult.fromCounts(
+                        mongoResult.getMatchedCount(),
+                        mongoResult.getModifiedCount()
+                ));
+    }
+    public static <T> Uni<UpdateResult> updateOne(ReactiveMongoCollection<T> collection, Bson filter, Bson update, ClientSession clientSession) {
+        return collection.updateOne(clientSession,filter, update)
+                .onItem()
+                .transform(mongoResult -> UpdateResult.fromCounts(
+                        mongoResult.getMatchedCount(),
+                        mongoResult.getModifiedCount()
+                ));
+    }
+
+    public static <T> Uni<List<T>> findManyByFilter(ReactiveMongoCollection<T> collection, Bson filter) {
+        return collection.find(filter).collect().asList();
     }
 
 
@@ -81,9 +150,6 @@ public class MongoUtil {
         return collection.deleteOne(filter)
                 .onItem()
                 .transform(mongoResult -> {
-                    if (mongoResult.getDeletedCount() == 0) {
-                        throw new NotFoundException("Document not found for deletion");
-                    }
                     return DeleteResult.fromCount((int) mongoResult.getDeletedCount());
                 });
     }
@@ -92,23 +158,7 @@ public class MongoUtil {
         return collection.countDocuments(filter);
     }
 
-    public static <T> Uni<List<T>> paginateAscending(ReactiveMongoCollection<T> collection, int skip, int limit, String field) {
-        return collection.find(new FindOptions().sort(ascending(field))
-                .skip(skip)
-                .limit(limit))
-                .collect().asList();
-    }
 
-
-
-    public static <T> Uni<UpdateResult> updateMany(ReactiveMongoCollection<T> collection, Bson filter, Bson update) {
-        return collection.updateMany(filter, update)
-                .onItem()
-                .transform(mongoResult -> UpdateResult.fromCounts(
-                         mongoResult.getMatchedCount(),
-                        mongoResult.getModifiedCount()
-                ));
-    }
 
     public static <T> Uni<DeleteResult> deleteMany(ReactiveMongoCollection<T> collection, Bson filter) {
         return collection.deleteMany(filter)

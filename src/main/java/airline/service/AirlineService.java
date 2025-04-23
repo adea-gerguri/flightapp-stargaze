@@ -17,6 +17,7 @@ import jakarta.ws.rs.BadRequestException;
 import java.util.List;
 
 import shared.GlobalHibernateValidator;
+import shared.PaginationQueryParams;
 import shared.mongoUtils.DeleteResult;
 import shared.mongoUtils.InsertResult;
 
@@ -41,24 +42,17 @@ public class AirlineService {
       return airlineRepository.deleteAirline(id)
               .onItem()
               .transform(deleteResult->{
-                  if(deleteResult.getDeletedCount() == 0){
-                      throw new AirlineException("Airline not found", 404);
-                  }
                   return deleteResult;
               });
   }
 
 
-  public Uni<List<AirlinesByCountryDto>> groupAirlinesByCountry(int skip, int limit, int sort) {
-    return airlineRepository.groupAirlinesByCountry(skip, limit, sort)
-            .onFailure()
-            .transform(e->{throw new AirlineException(e.getMessage(), 404);});
+  public Uni<List<AirlinesByCountryDto>> groupAirlinesByCountry(PaginationQueryParams paginationQueryParams) {
+    return airlineRepository.groupAirlinesByCountry( paginationQueryParams);
   }
 
-  public Uni<List<AirlinesByCityDto>> groupAirlinesByCity(int skip, int limit, int sort) {
-    return airlineRepository.groupByCity(skip, limit, sort)
-            .onFailure()
-            .transform(e-> { throw new AirlineException(e.getMessage(), 404);});
+  public Uni<List<AirlinesByCityDto>> groupAirlinesByCity(PaginationQueryParams paginationQueryParams) {
+    return airlineRepository.groupByCity(paginationQueryParams);
   }
 }
 

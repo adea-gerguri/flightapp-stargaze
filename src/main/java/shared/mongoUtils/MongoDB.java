@@ -1,5 +1,6 @@
 package shared.mongoUtils;
 
+import com.mongodb.reactivestreams.client.ClientSession;
 import io.quarkus.mongodb.reactive.ReactiveMongoClient;
 import io.quarkus.mongodb.reactive.ReactiveMongoCollection;
 import io.quarkus.mongodb.reactive.ReactiveMongoDatabase;
@@ -14,4 +15,5 @@ public class MongoDB {
     public ReactiveMongoDatabase getDatabase() {
         return mongoClient.getDatabase("stargaze");
     }
+
 }

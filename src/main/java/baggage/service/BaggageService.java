@@ -15,6 +15,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
 import shared.GlobalHibernateValidator;
+import shared.PaginationQueryParams;
 import shared.mongoUtils.InsertResult;
 
 import java.util.List;
@@ -29,23 +30,17 @@ public class BaggageService {
 
     public Uni<InsertResult> addBaggage(CreateBaggageDto baggageDto){
         return validator.validate(baggageDto)
-                .onFailure()
-                .transform(e->new BaggageException(e.getMessage(), 400))
                 .flatMap(validatedDto ->{
                     return baggageRepository.addBaggage(BaggageMapper.toBaggageEntity(validatedDto));
                 });
     }
 
-    public Uni<List<BaggageWeightDto>> getBaggageGroupedByType(int skip, int limit, int sort) {
-        return baggageRepository.groupByBaggageType(skip, limit, sort)
-                .onFailure()
-                .transform(e->new BaggageException(e.getMessage(), 400));
+    public Uni<List<BaggageWeightDto>> getBaggageGroupedByType(PaginationQueryParams paginationQueryParams) {
+        return baggageRepository.groupByBaggageType(paginationQueryParams);
     }
 
-    public Uni<List<BaggagePriceDto>> getBaggageSummaryByReservationId(int skip, int limit, int sort) {
-        return baggageRepository.groupByReservationIdAndTotalPrice(skip, limit, sort)
-                .onFailure()
-                .transform(e->new BaggageException(e.getMessage(),404));
+    public Uni<List<BaggagePriceDto>> getBaggageSummaryByReservationId(PaginationQueryParams paginationQueryParams) {
+        return baggageRepository.groupByReservationIdAndTotalPrice(paginationQueryParams);
     }
 
 

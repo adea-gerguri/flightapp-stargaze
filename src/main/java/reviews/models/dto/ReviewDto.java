@@ -1,6 +1,7 @@
 package reviews.models.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,10 +14,10 @@ import org.hibernate.validator.constraints.Range;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ReviewDto {
-    private String reservationId;
+    @NotNull private String reservationId;
     private String message;
     @Range(min=1, max=5)
-    private int rating;
-    private String reviewDate;
+    @NotNull private int rating;
+    @NotNull private String reviewDate;
 
 }

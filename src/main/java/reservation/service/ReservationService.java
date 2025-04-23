@@ -1,11 +1,16 @@
 package reservation.service;
 
 import baggage.enums.BaggageType;
+import com.mongodb.client.ClientSession;
+import com.mongodb.client.TransactionBody;
+import com.mongodb.client.model.Updates;
 import flight.service.FlightService;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
+import org.bson.conversions.Bson;
 import reservation.enums.ReservationStatus;
 import reservation.enums.SeatType;
 import reservation.exception.ReservationException;
@@ -16,13 +21,19 @@ import reservation.models.dto.UserRefundDto;
 import reservation.models.dto.UserReservationDto;
 import reservation.repository.ReservationRepository;
 import shared.GlobalHibernateValidator;
+import shared.PaginationQueryParams;
 import shared.mongoUtils.InsertResult;
+import shared.mongoUtils.MongoSession;
+import shared.mongoUtils.MongoTransactionManager;
+import ticket.models.TicketEntity;
+import ticket.service.TicketService;
 import user.exceptions.UserException;
 import user.service.UserService;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Slf4j
 @ApplicationScoped
 public class ReservationService {
     @Inject
@@ -35,18 +46,32 @@ public class ReservationService {
     UserService userService;
 
     @Inject
-    GlobalHibernateValidator validator;
+    TicketService ticketService;
 
-    public Uni<List<ReservationEntity>> listReservations(int skip, int limit) {
-        return reservationRepository.listReservations(skip, limit)
-                .onFailure()
-                .transform(e->new ReservationException(e.getMessage(),404));
+    @Inject
+    GlobalHibernateValidator validator;
+    @Inject
+    MongoTransactionManager mongoTransactionManager;
+
+    public static final double PRICE_COACH = 50.0;
+    public static final double PRICE_VIP = 250.0;
+    public static final double PRICE_BUSINESS = 150.0;
+
+    public static final double PRICE_CABIN =20.0;
+    public static final double PRICE_FREE_CARRY_ON = 30.0;
+    public static final double PRICE_TROLLEY = 50.0;
+    public static final double PRICE_CHECKED_IN = 75.0;
+
+    public Uni<List<ReservationEntity>> listReservations(PaginationQueryParams paginationQueryParams) {
+        return reservationRepository.listReservations(paginationQueryParams);
     }
 
-    @Transactional
-    public Uni<InsertResult> createReservation(CreateReservationDto dto) {
-        return validator.validate(dto)
-                .onItem().transformToUni(validDto -> {
+    public Uni<InsertResult> createReservation(CreateReservationDto createReservationDto) {
+        MongoSession session = new MongoSession();
+        return mongoTransactionManager.execute()
+                .invoke(session::setSession)
+                .flatMap(clientSession -> validator.validate(createReservationDto))
+                .flatMap(validDto -> {
                     SeatType seatType = validDto.getSeatSelection();
                     BaggageType baggageType = validDto.getBaggage().getBaggageType();
                     double additionalPrice = calculateAdditionalPrice(seatType, baggageType);
@@ -62,45 +87,57 @@ public class ReservationService {
                     reservation.setPrice(totalPrice);
 
                     return flightService.checkAndUpdateFlightAvailability(validDto.getFlightNumber())
-                            .onItem().transformToUni(updatedFlight -> {
-                                return reservationRepository.insertReservation(reservation)
-                                        .onItem().transformToUni(insertResult -> {
-                                            return userService.decreaseBalance(validDto.getUserId(), totalPrice)
-                                                    .onItem().transform(decreaseResult -> insertResult);
-                                        });
-                            });
-                });
+                            .flatMap(updatedFlight ->
+                                    reservationRepository.insertReservation(reservation, session.getSession())
+                                            .flatMap(insertResult -> {
+                                                return ticketService.findAvailableTicketByFlightNumber(validDto.getFlightNumber(), session.getSession())
+                                                        .flatMap(ticket -> {
+                                                            return ticketService.updateTicket(ticket.getId(), validDto.getUserId(), reservation.getId(), totalPrice, session.getSession())
+                                                                    .flatMap(updateResult ->
+                                                                            userService.decreaseBalance(validDto.getUserId(), totalPrice, session.getSession())
+                                                                                    .onItem().transform(result -> insertResult)
+                                                                    );
+                                                        });
+                                            })
+
+                            );
+                }).call(insert -> mongoTransactionManager.commit(session.getSessionUni()))
+                .onFailure()
+                .call(error -> mongoTransactionManager.end(session.getSessionUni()));
     }
 
 
+
+
     public double calculateAdditionalPrice(SeatType seatSelection, BaggageType baggageType) {
-        double seatPrice = 0.0;
-        double baggagePrice = 0.0;
+        double seatPrice =0.0;
+        double baggagePrice=0.0;
 
         switch (seatSelection) {
             case COACH:
-                seatPrice = 50.0;
+                seatPrice = PRICE_COACH;
                 break;
             case BUSINESS:
-                seatPrice = 150.0;
+                seatPrice = PRICE_BUSINESS;
                 break;
             case VIP:
-                seatPrice = 250.0;
+                seatPrice = PRICE_VIP;
                 break;
         }
 
+
         switch (baggageType) {
             case CABIN:
-                baggagePrice = 20.0;
+                baggagePrice = PRICE_CABIN;
                 break;
             case FREE_CARRY_ON:
-                baggagePrice = 30.0;
+                baggagePrice = PRICE_FREE_CARRY_ON;
                 break;
             case TROLLEY:
-                baggagePrice = 50.0;
+                baggagePrice = PRICE_TROLLEY;
                 break;
             case CHECKED_IN:
-                baggagePrice = 75.0;
+                baggagePrice = PRICE_CHECKED_IN;
                 break;
         }
 
@@ -110,84 +147,62 @@ public class ReservationService {
     public Uni<ReservationDto> findByUserIdAndFlightNumber(String userId, String flightNumber) {
         return reservationRepository.findByUserIdAndFlightNumber(userId, flightNumber)
                 .onItem().transform(reservationDto -> {
-                    if (reservationDto != null) {
-                        return reservationDto;
-                    } else {
-                        throw new ReservationException("Reservation not found for user", 404);
-                    }
-                })
-                .onFailure(ReservationException.class)
-                .recoverWithItem(ex -> {
-                    throw new ReservationException("Reservation not found for user", 404);
+                    return reservationDto;
                 });
     }
 
-
-    public Uni<UserReservationDto> findUserWithMostReservations() {
-        return reservationRepository.findUserWithMostReservations()
-                .onFailure(ReservationException.class)
-                .recoverWithItem(() -> {
-                    throw new ReservationException("No reservations found", 404);
-                });
+    public Uni<List<UserReservationDto>> findUserWithMostReservations() {
+        return reservationRepository.findUserWithMostReservations();
     }
 
-    @Transactional
     public Uni<UserRefundDto> processRefund(String userId, String flightNumber) {
-        return reservationRepository.findByUserIdAndFlightNumber(userId, flightNumber)
-                .onItem().transformToUni(reservation -> {
-                    System.out.println(reservation);
-                    if (reservation == null) {
-                        throw new ReservationException("Reservation not found", 404);
-                    }
-                    if (reservation.getReservationStatus() == ReservationStatus.REFUNDED) {
-                        throw new ReservationException("Reservation already refunded", 400);
-                    }
-                    double price = reservation.getPrice();
-                    return userService.increaseBalance(userId, price)
-                            .onItem().transformToUni(updateResult -> {
-                                if (updateResult.getModifiedCount() > 0) {
+        MongoSession session = new MongoSession();
 
-                                    reservation.setReservationStatus(ReservationStatus.REFUNDED);
-
-                                    return flightService.incrementCapacity(flightNumber)
-                                            .onItem().transformToUni(flightUpdateResult -> {
-                                                return Uni.createFrom().item(new UserRefundDto(
-                                                        userId,
-                                                        1,
-                                                        0,
-                                                        ReservationStatus.REFUNDED
-                                                ));
-                                            });
-                                } else {
-                                    throw new UserException("Failed to update user balance", 500);
-                                }
-                            });
-                });
+        return mongoTransactionManager.execute()
+                .invoke(session::setSession)
+                .flatMap(ignored ->
+                        reservationRepository.findByUserIdAndFlightNumber(userId, flightNumber)
+                                .flatMap(reservation -> {
+                                    double price = reservation.getPrice();
+                                    return userService.increaseBalance(userId, price, session.getSession())
+                                            .flatMap(updateResult ->
+                                                    ticketService.findTicketByFlightNumber(flightNumber, userId, session.getSession())
+                                                            .flatMap(ticketEntity ->
+                                                                    ticketService.updateTicket(
+                                                                                    ticketEntity.getId(),
+                                                                                    ticketEntity.getUserId(),
+                                                                                    ticketEntity.getReservationId(),
+                                                                                    ticketEntity.getPrice(),
+                                                                                    session.getSession()
+                                                                            )
+                                                                            .flatMap(ticketUpdateResult -> {
+                                                                                reservation.setReservationStatus(ReservationStatus.REFUNDED);
+                                                                                return flightService.incrementCapacity(flightNumber, session.getSession())
+                                                                                        .flatMap(flightUpdateResult ->
+                                                                                                Uni.createFrom().item(new UserRefundDto(
+                                                                                                        userId,
+                                                                                                        1,
+                                                                                                        0,
+                                                                                                        ReservationStatus.REFUNDED
+                                                                                                ))
+                                                                                        );
+                                                                            })
+                                                            )
+                                            );
+                                })
+                )
+                .call(unused -> mongoTransactionManager.commit(session.getSessionUni()))
+                .onFailure().call(error -> mongoTransactionManager.end(session.getSessionUni()));
     }
 
-    public Uni<UserReservationDto> findUserWithMostRefundedTickets() {
+
+
+    public Uni<List<UserReservationDto>> findUserWithMostRefundedTickets() {
         return reservationRepository.findUserWithMostRefundedTickets()
                 .onItem().transform(reservation -> {
-                    if (reservation != null) {
-                        return reservation;
-                    } else {
-                        throw new ReservationException("No refunded reservations found", 404);
-                    }
-                })
-                .onFailure(ReservationException.class)
-                .recoverWithItem(() -> {
-                    throw new ReservationException("No refunded reservations found", 404);
+                    return reservation;
                 });
     }
-
-
-
-
-
-
-
-
-
 
 
 }

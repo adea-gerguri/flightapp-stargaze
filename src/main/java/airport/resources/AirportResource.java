@@ -26,7 +26,7 @@ public class AirportResource {
 
     @GET
     @PermitAll
-    public Uni<List<AirportEntity>> listAllAirports(){  //fix this here map each element of the list somewhere to the AirportDto maybe
+    public Uni<List<AirportEntity>> listAllAirports(){
         return service.listAllAirports();
     }
 
@@ -47,16 +47,16 @@ public class AirportResource {
     @GET
     @Path("/country")
     @PermitAll
-    public Uni<List<AirportGroupByCountryDto>> groupByCountry(@BeanParam PaginationQueryParams params) {
-        return service.groupAirportsByCountry(params.getSkip(), params.getLimit(), params.getSort());
+    public Uni<List<AirportGroupByCountryDto>> groupByCountry(@BeanParam PaginationQueryParams paginationQueryParams) {
+        return service.groupAirportsByCountry(paginationQueryParams);
     }
 
 
     @GET
     @Path("/city")
     @PermitAll
-    public Uni<List<AirportGroupByCityDto>> groupByCity(@BeanParam PaginationQueryParams params){
-        return service.groupAirportsByCity(params.getSkip(), params.getLimit(), params.getSort());
+    public Uni<List<AirportGroupByCityDto>> groupByCity(@BeanParam PaginationQueryParams paginationQueryParams){
+        return service.groupAirportsByCity(paginationQueryParams);
     }
 
 }

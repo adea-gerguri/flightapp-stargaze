@@ -14,6 +14,7 @@ import org.bson.conversions.Bson;
 import payment.exceptions.PaymentException;
 import payment.models.PaymentEntity;
 import payment.models.dto.PaymentDto;
+import shared.PaginationQueryParams;
 import shared.mongoUtils.InsertResult;
 import shared.mongoUtils.MongoUtil;
 
@@ -26,11 +27,11 @@ public class PaymentRepository {
     MongoUtil mongoService;
 
 
-    public Uni<List<PaymentDto>> lowestAmount(int skip, int limit) {
+    public Uni<List<PaymentDto>> lowestAmount(PaginationQueryParams paginationQueryParams) {
         List<Bson> pipeline = List.of(
                 Aggregates.sort(Sorts.ascending("paymentAmount")),
-                Aggregates.skip(skip),
-                Aggregates.limit(limit),
+                Aggregates.skip(paginationQueryParams.getSkip()),
+                Aggregates.limit(paginationQueryParams.getLimit()),
                 Aggregates.project(Projections.fields(
                         Projections.computed("id", "$_id"),
                         Projections.include("reservationId", "paymentAmount", "paymentMethod", "paymentStatus")

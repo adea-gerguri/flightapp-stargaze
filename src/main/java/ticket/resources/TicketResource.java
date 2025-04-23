@@ -40,14 +40,14 @@ public class TicketResource {
     @GET
     @Path("/cheapest")
     @PermitAll
-    public Uni<TicketDto> getCheapestTicket() {
+    public Uni<List<TicketDto>> getCheapestTicket() {
         return service.getCheapestTicket();
     }
 
     @GET
     @Path("/most-expensive")
     @PermitAll
-    public Uni<TicketDto> getMostExpensiveTicket() {
+    public Uni<List<TicketDto>> getMostExpensiveTicket() {
         return service.getMostExpensiveTicket();
     }
 

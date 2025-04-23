@@ -28,7 +28,7 @@ public class AirlineResource {
 
   @POST
   @RolesAllowed("admin")
-  public Uni<InsertResult> addAirline(CreateAirlineDTO createAirlineDTO) {
+  public Uni<InsertResult> addAirline( CreateAirlineDTO createAirlineDTO) {
     return service.addAirline(createAirlineDTO);
   }
 
@@ -42,15 +42,15 @@ public class AirlineResource {
   @GET
   @PermitAll
   @Path("/city")
-  public Uni<List<AirlinesByCityDto>> groupByCity(@BeanParam PaginationQueryParams params) {
-    return service.groupAirlinesByCity(params.getSkip(), params.getLimit(), params.getSort());
+  public Uni<List<AirlinesByCityDto>> groupByCity(@BeanParam PaginationQueryParams paginationQueryParams) {
+    return service.groupAirlinesByCity(paginationQueryParams);
   }
 
   @GET
   @PermitAll
   @Path("/country")
-  public Uni<List<AirlinesByCountryDto>> groupByCountry(@BeanParam PaginationQueryParams params){
-    return service.groupAirlinesByCountry(params.getSkip(), params.getLimit(), params.getSort());
+  public Uni<List<AirlinesByCountryDto>> groupByCountry(@BeanParam PaginationQueryParams paginationQueryParams){
+    return service.groupAirlinesByCountry(paginationQueryParams);
   }
 
 }

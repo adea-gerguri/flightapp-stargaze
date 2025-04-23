@@ -12,6 +12,7 @@ import payment.models.dto.CreatePaymentDto;
 import payment.models.dto.PaymentDto;
 import payment.repository.PaymentRepository;
 import shared.GlobalHibernateValidator;
+import shared.PaginationQueryParams;
 import shared.mongoUtils.InsertResult;
 
 import java.util.List;
@@ -26,17 +27,14 @@ public class PaymentService {
 
     public Uni<InsertResult> addPayment(CreatePaymentDto paymentDto) {
         return validator.validate(paymentDto)
-                .onFailure(ConstraintViolationException.class)
-                .transform(e->new PaymentException(e.getMessage(),400))
                 .flatMap(validatedDto->{
                     return paymentRepository.addPayment(PaymentMapper.toPayment(validatedDto));
                 });
     }
 
-    public Uni<List<PaymentDto>> listLowestAmount(int skip, int limit){
-        return paymentRepository.lowestAmount(skip, limit)
-                .onFailure()
-                .transform(e->new PaymentException(e.getMessage(),404));
+    public Uni<List<PaymentDto>> listLowestAmount(PaginationQueryParams paginationQueryParams)
+    {
+        return paymentRepository.lowestAmount(paginationQueryParams);
     }
 
 }

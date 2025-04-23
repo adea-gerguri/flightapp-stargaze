@@ -16,9 +16,12 @@ import io.quarkus.mongodb.reactive.ReactiveMongoCollection;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+
+import java.util.ArrayList;
 import java.util.List;
 
 import org.bson.conversions.Bson;
+import shared.PaginationQueryParams;
 import shared.mongoUtils.DeleteResult;
 import shared.mongoUtils.InsertResult;
 import shared.mongoUtils.MongoUtil;
@@ -31,8 +34,6 @@ public class AirlineRepository {
   @Inject
   MongoUtil mongoService;
 
-  private Bson sorting;
-
   public Uni<InsertResult> addAirline(AirlineEntity airline) {
     return MongoUtil.insertOne(getCollection(), airline);
   }
@@ -41,42 +42,28 @@ public class AirlineRepository {
     return MongoUtil.deleteOne(getCollection(), id);
   }
 
-  public Uni<List<AirlinesByCityDto>> groupByCity(int skip, int limit, int sort){
-    if(sort==1){
-      sorting = Sorts.ascending("planeCount");
-    } else{
-      sorting = Sorts.descending("planeCount");
-    }
-    List<Bson>pipeline = List.of(
-            Aggregates.group("$city",Accumulators.sum("planeCount","$planeCount")),
-            Aggregates.project(Projections.fields(
-                    Projections.computed("city","$_id"),
-                    Projections.include("planeCount")
-            )),
-            Aggregates.sort(sorting),
-            Aggregates.skip(skip),
-            Aggregates.limit(limit)
-    );
+  public Uni<List<AirlinesByCityDto>> groupByCity(PaginationQueryParams paginationQueryParams) {
+    List<Bson> pipeline = new ArrayList<>();
+    pipeline.add(Aggregates.group("$city", Accumulators.sum("planeCount", "$planeCount")));
+    pipeline.add(Aggregates.project(Projections.fields(
+            Projections.computed("city", "$_id"),
+            Projections.include("planeCount")
+    )));
+
+    pipeline.addAll(MongoUtil.listWithPagination(paginationQueryParams, "planeCount"));
+
     return MongoUtil.aggregate(getCollection(), pipeline, AirlinesByCityDto.class);
   }
 
+  public Uni<List<AirlinesByCountryDto>> groupAirlinesByCountry(PaginationQueryParams paginationQueryParams) {
+    List<Bson> pipeline = new ArrayList<>();
+    pipeline.add(Aggregates.group("$country", Accumulators.sum("planeCount", "$planeCount")));
+    pipeline.add(Aggregates.project(Projections.fields(
+            Projections.computed("country", "$_id"),
+            Projections.include("planeCount")
+    )));
 
-  public Uni<List<AirlinesByCountryDto>> groupAirlinesByCountry(int skip, int limit, int sort) {
-    if(sort==1){
-      sorting = Sorts.ascending("planeCount");
-    }else{
-      sorting = Sorts.descending("planeCount");
-    }
-    List<Bson> pipeline = List.of(
-            Aggregates.group("$country", Accumulators.sum("planeCount", "$planeCount")),
-            Aggregates.project(Projections.fields(
-                    Projections.computed("country", "$_id"),
-                    Projections.include("planeCount")
-            )),
-            Aggregates.sort(sorting),
-            Aggregates.skip(skip),
-            Aggregates.limit(limit)
-    );
+    pipeline.addAll(MongoUtil.listWithPagination(paginationQueryParams, "planeCount"));
 
     return MongoUtil.aggregate(getCollection(), pipeline, AirlinesByCountryDto.class);
   }

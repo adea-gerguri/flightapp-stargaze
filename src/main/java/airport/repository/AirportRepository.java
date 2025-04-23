@@ -1,5 +1,6 @@
 package airport.repository;
 
+import airline.models.dto.AirlinesByCountryDto;
 import airport.models.dto.AirportGroupByCityDto;
 import airport.models.dto.AirportGroupByCountryDto;
 import com.mongodb.client.model.Accumulators;
@@ -14,11 +15,13 @@ import jakarta.inject.Inject;
 import airport.models.AirportEntity;
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import shared.PaginationQueryParams;
 import shared.mongoUtils.DeleteResult;
 import shared.mongoUtils.InsertResult;
 import shared.mongoUtils.MongoUtil;
 import shared.mongoUtils.UpdateResult;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @ApplicationScoped
@@ -26,7 +29,6 @@ public class AirportRepository {
     @Inject
     MongoUtil mongoUtil;
 
-    private Bson sorting;
 
     public Uni<List<AirportEntity>> listAll(){
         return MongoUtil.listAll(getCollection(),new FindOptions());
@@ -41,42 +43,29 @@ public class AirportRepository {
     }
 
 
-    public Uni<List<AirportGroupByCountryDto>> groupAirportsByCountry(int skip, int limit, int sort) {
-        if(sort ==1){
-            sorting= Aggregates.sort(Sorts.ascending("airportCount"));
-        }else{
-            sorting = Aggregates.sort(Sorts.descending("airportCount"));
-        }
-        List<Bson> pipeline = List.of(
-                Aggregates.group("$country", Accumulators.sum("airportCount", 1)),
-                Aggregates.project(Projections.fields(
-                        Projections.computed("country", "$_id"),
-                        Projections.include("airportCount")
-                )),
-                Aggregates.sort(sorting),
-                Aggregates.skip(skip),
-                Aggregates.limit(limit)
-        );
+    public Uni<List<AirportGroupByCountryDto>> groupAirportsByCountry(PaginationQueryParams paginationQueryParams) {
+        List<Bson> pipeline = new ArrayList<>();
+        pipeline.add(Aggregates.group("$country", Accumulators.sum("airportCount", "$airportCount")));
+        pipeline.add(Aggregates.project(Projections.fields(
+                Projections.computed("country", "$_id"),
+                Projections.include("airportCount")
+        )));
+
+        pipeline.addAll(MongoUtil.listWithPagination(paginationQueryParams, "airportCount"));
 
         return MongoUtil.aggregate(getCollection(), pipeline, AirportGroupByCountryDto.class);
     }
 
-    public Uni<List<AirportGroupByCityDto>> groupAirportsByCity(int skip, int limit, int sort){
-        if(sort ==1){
-            sorting= Aggregates.sort(Sorts.ascending("airportCount"));
-        }else{
-            sorting = Aggregates.sort(Sorts.descending("airportCount"));
-        }
-        List<Bson> pipeline = List.of(
-                Aggregates.group("$city", Accumulators.sum("airportCount",1)),
-                Aggregates.project(Projections.fields(
-                        Projections.computed("city", "$_id"),
-                        Projections.include("airportCount")
-                )),
-                Aggregates.sort(sorting),
-                Aggregates.skip(skip),
-                Aggregates.limit(limit)
-        );
+    public Uni<List<AirportGroupByCityDto>> groupAirportsByCity(PaginationQueryParams paginationQueryParams) {
+        List<Bson> pipeline = new ArrayList<>();
+        pipeline.add(Aggregates.group("$city", Accumulators.sum("airportCount", "$airportCount")));
+        pipeline.add(Aggregates.project(Projections.fields(
+                Projections.computed("city", "$_id"),
+                Projections.include("airportCount")
+        )));
+
+        pipeline.addAll(MongoUtil.listWithPagination(paginationQueryParams, "airportCount"));
+
         return MongoUtil.aggregate(getCollection(), pipeline, AirportGroupByCityDto.class);
     }
 

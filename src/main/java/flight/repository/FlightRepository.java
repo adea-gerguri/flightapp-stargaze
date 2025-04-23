@@ -1,6 +1,8 @@
 package flight.repository;
 
 import com.mongodb.client.model.*;
+import com.mongodb.reactivestreams.client.ClientSession;
+import flight.RouteQueryParams;
 import flight.exceptions.FlightException;
 import flight.mappers.FlightMapper;
 import flight.models.dto.BookStatusFlightDto;
@@ -44,27 +46,30 @@ public class FlightRepository {
         return MongoUtil.aggregate(getCollection(), pipeline, FlightDto.class);
     }
 
-    public Uni<List<FlightDto>> findFastestRoute(String destinationAirportId, String departureDate, String departureAirportId) {
+    public Uni<List<FlightDto>> findFastestRoute(RouteQueryParams routeQueryParams) {
         List<Bson> pipeline = List.of(
                 Aggregates.match(Filters.and(
-                        Filters.eq("arrivalAirportId", destinationAirportId),
-                        Filters.eq("departureAirportId", departureAirportId),
-                        Filters.regex("departureTime", departureDate)
+                        Filters.eq("arrivalAirportId", routeQueryParams.getDestinationAirportId()),
+                        Filters.eq("departureAirportId", routeQueryParams.getDepartureAirportId()),
+                        Filters.regex("departureTime", routeQueryParams.getDepartureDate())
                 )),
-                Aggregates.project(Document.parse("{ " +
-                        "'flightNumber': 1, " +
-                        "'departureAirportId': 1, " +
-                        "'arrivalAirportId': 1, " +
-                        "'departureTime': 1, " +
-                        "'arrivalTime': 1, " +
-                        "'duration': { $subtract: [ { $toDate: '$arrivalTime' }, { $toDate: '$departureTime' } ] } " +
-                        "}")),
+                Aggregates.project(Projections.fields(
+                        Projections.include("flightNumber", "departureAirportId", "arrivalAirportId", "departureTime", "arrivalTime"),
+                        Projections.computed("durations", "{$subtract: [ { $toDate: '$arrivalTime' }, { $toDate: '$departureTime' } ]}")
+                )),
                 Aggregates.sort(Sorts.ascending("duration")),
                 Aggregates.limit(1)
         );
 
         return MongoUtil.aggregate(getCollection(), pipeline, FlightDto.class);
     }
+
+    public Uni<Boolean> existsByFlightNumber(String flightNumber) {
+        Bson filter = Filters.eq("flightNumber", flightNumber);
+        return getCollectionFlight().countDocuments(filter)
+                .onItem().transform(count -> count > 0);
+    }
+
 
     public Uni<List<FlightDto>> findCheapestRoute(String destinationAirportId, String departureDate, String departureAirportId) {
         List<Bson> pipeline = List.of(
@@ -73,15 +78,10 @@ public class FlightRepository {
                         Filters.eq("departureAirportId", departureAirportId),
                         Filters.regex("departureTime", departureDate)
                 )),
-                Aggregates.project(Document.parse("{ " +
-                        "'flightNumber': 1, " +
-                        "'departureAirportId': 1, " +
-                        "'arrivalAirportId': 1, " +
-                        "'departureTime': 1, " +
-                        "'arrivalTime': 1, " +
-                        "'price':1,"+
-                        "'duration': { $subtract: [ { $toDate: '$arrivalTime' }, { $toDate: '$departureTime' } ] } " +
-                        "}")),
+                Aggregates.project(Projections.fields(
+                        Projections.include("flightNumber", "departureAirportId", "arrivalAirportId", "departureTime", "arrivalTime", "price"),
+                        Projections.computed("duration", "{ $subtract: [ { $toDate: '$arrivalTime' }, { $toDate: '$departureTime' } ] }")
+                )),
                 Aggregates.sort(Sorts.ascending("price")),
                 Aggregates.limit(1)
         );
@@ -96,15 +96,10 @@ public class FlightRepository {
                         Filters.eq("departureAirportId", departureAirportId),
                         Filters.regex("departureTime", departureDate)
                 )),
-                Aggregates.project(Document.parse("{ " +
-                        "'flightNumber': 1, " +
-                        "'departureAirportId': 1, " +
-                        "'arrivalAirportId': 1, " +
-                        "'departureTime': 1, " +
-                        "'arrivalTime': 1, " +
-                        "'price':1,"+
-                        "'duration': { $subtract: [ { $toDate: '$arrivalTime' }, { $toDate: '$departureTime' } ] } " +
-                        "}")),
+                Aggregates.project(Projections.fields(
+                        Projections.include("flightNumber", "departureAirportId", "arrivalAirportId", "departureTime", "arrivalTime", "price"),
+                        Projections.computed("duration", "{ $subtract: [ { $toDate: '$arrivalTime' }, { $toDate: '$departureTime' } ] }")
+                )),
                 Aggregates.sort(Sorts.descending("price")),
                 Aggregates.limit(1)
         );
@@ -113,12 +108,15 @@ public class FlightRepository {
     }
 
     public Uni<List<FlightDto>> findFlightsWithStopsAndWaitingTimes(String departureAirportId, String destinationAirportId, String departureDate) {
-        List<Bson> pipeline = List.of(
+        List<Bson> pipeline = new ArrayList<>();
+
+        pipeline.add(
                 Aggregates.match(Filters.and(
                         Filters.eq("departureAirportId", departureAirportId),
                         Filters.eq("arrivalAirportId", destinationAirportId),
                         Filters.regex("departureTime", departureDate)
-                )),
+                )));
+        pipeline.add(
                 Aggregates.graphLookup("flights",
                         "$arrivalAirportId",
                         "departureAirportId",
@@ -127,99 +125,57 @@ public class FlightRepository {
                         new GraphLookupOptions()
                                 .maxDepth(2)
                                 .restrictSearchWithMatch(Filters.regex("departureTime", departureDate))
-                ),
-                Aggregates.project(Document.parse("""
-                    {
-                        fullPath: {
-                            $concatArrays: [[
-                                {
-                                    departureAirportId: "$departureAirportId",
-                                    arrivalAirportId: "$arrivalAirportId",
-                                    departureTime: "$departureTime",
-                                    arrivalTime: "$arrivalTime",
-                                    price: "$price"
-                                }
-                            ], "$connections"]
-                        }
-                    }
-                    """)),
-                Aggregates.project(Document.parse("""
-                    {
-                        fullPath: 1,
-                        price: { $sum: "$fullPath.price" },
-                        departureTimes: {
-                            $map: {
-                                input: "$fullPath",
-                                as: "f",
-                                in: { $toDate: "$$f.departureTime" }
-                            }
-                        },
-                        arrivalTimes: {
-                            $map: {
-                                input: "$fullPath",
-                                as: "f",
-                                in: { $toDate: "$$f.arrivalTime" }
-                            }
-                        }
-                    }
-                    """)),
-                Aggregates.addFields(new Field<>("fullPath", Document.parse("""
-                        {
-                            $sortArray: {
-                            input: "$fullPath",
-                            sortBy: { departureTime: 1 }
-                           }
-                        }
-                """))),
-                Aggregates.addFields(new Field<>("totalTravelTime",
-                        Document.parse("""
-                        {
-                            $subtract: [
-                                { $max: "$arrivalTimes" },
-                                { $min: "$departureTimes" }
-                            ]
-                        }
-                        """)
+                ));
+        pipeline.add(Aggregates.project(Projections.fields(
+                Projections.computed("fullPath", new Document("$concatArrays", List.of(
+                        List.of(new Document("departureAirportId", "$departureAirportId")
+                                .append("arrivalAirportId", "$arrivalAirportId")
+                                .append("departureTime", "$departureTime")
+                                .append("arrivalTime", "$arrivalTime")
+                                .append("price", "$price")),
+                        "$connections"
+                )))
+        )));
+        pipeline.add(Aggregates.project(Projections.fields(
+                Projections.include("fullPath"),
+                Projections.computed("price", new Document("$sum", "$fullPath.price")),
+                Projections.computed("departureTimes", new Document("$map", new Document()
+                        .append("input", "$fullPath")
+                        .append("as", "f")
+                        .append("in", new Document("$toDate", "$$f.departureTime"))
                 )),
-                Aggregates.addFields(new Field<>("totalWaitingTime",
-                        Document.parse("""
-                        {
-                            "$sum": {
-                                "$map": {
-                                    "input": {
-                                        "$range": [0, { "$subtract": [ { "$size": "$fullPath" }, 1 ] }]
-                                    },
-                                    "as": "i",
-                                    "in": {
-                                        "$subtract": [
-                                            {
-                                                "$toDate": {
-                                                    "$arrayElemAt": ["$fullPath.arrivalTime", "$$i"]
-                                                }
-                                            },
-                                            {
-                                                "$toDate": {
-                                                    "$arrayElemAt": ["$fullPath.departureTime", { "$add": ["$$i", 1] }]
-                                                }
-                                            }
-                                        ]
-                                    }
-                                }
-                            }
-                        }
-                        """)
-                )),
-                Aggregates.match(Filters.expr(new Document("$eq", List.of(
-                        new Document("$last", "$fullPath.arrivalAirportId"),
-                        destinationAirportId
-                )))),
-                Aggregates.sort(Sorts.ascending("totalWaitingTime")),
-                Aggregates.limit(5)
-        );
+                Projections.computed("arrivalTimes", new Document("$map", new Document()
+                        .append("input", "$fullPath")
+                        .append("as", "f")
+                        .append("in", new Document("$toDate", "$$f.arrivalTime"))))
+        )));
+        pipeline.add(Aggregates.addFields(new Field<>("fullPath", new Document("$sortArray", new Document()
+                .append("input", "$fullPath")
+                .append("sortBy", new Document("departureTime", 1))
+        ))));
+        pipeline.add(Aggregates.addFields(new Field<>("totalTravelTime", new Document("$subtract", List.of(
+                new Document("$max", "$arrivalTimes"),
+                new Document("$min", "$departureTimes")
+        )))));
+        pipeline.add(Aggregates.addFields(new Field<>("totalWaitingTime", new Document("$sum", new Document("$map", new Document()
+                .append("input", new Document("$range", List.of(0, new Document("$subtract", List.of(
+                        new Document("$size", "$fullPath"), 1
+                )))))
+                .append("as", "i")
+                .append("in", new Document("$subtract", List.of(
+                        new Document("$toDate", new Document("$arrayElemAt", List.of("$fullPath.arrivalTime", "$$i"))),
+                        new Document("$toDate", new Document("$arrayElemAt", List.of("$fullPath.departureTime", new Document("$add", List.of("$$i", 1)))))
+                )))
+        )))));
+        pipeline.add(Aggregates.match(Filters.expr(new Document("$eq", List.of(
+                new Document("$last", "$fullPath.arrivalAirportId"),
+                destinationAirportId
+        )))));
+        pipeline.add(Aggregates.sort(Sorts.ascending("totalWaitingTime")));
+        pipeline.add(Aggregates.limit(5));
 
         return MongoUtil.aggregate(getCollection(), pipeline, FlightDto.class);
     }
-
 
 
     public Uni<DeleteResult> deleteById(String id) {
@@ -227,105 +183,77 @@ public class FlightRepository {
     }
 
 
-    public Uni<InsertResult> add(FlightEntity flight){
+    public Uni<InsertResult> add(FlightEntity flight) {
         return MongoUtil.insertOne(getCollection(), flight);
     }
 
-public Uni<BookStatusFlightDto> getCapacityAndBookedStatusByFlightNumber(String flightNumber) {
-    List<Bson> pipeline = Arrays.asList(
-            Aggregates.match(Filters.eq("flightNumber", flightNumber)),
-            Aggregates.project(Projections.fields(
-                    Projections.include("capacity", "booked"),
-                    Projections.excludeId()
-            ))
-    );
+    public Uni<List<BookStatusFlightDto>> getCapacityAndBookedStatusByFlightNumber(String flightNumber) {
+        List<Bson> pipeline = Arrays.asList(
+                Aggregates.match(Filters.eq("flightNumber", flightNumber)),
+                Aggregates.project(Projections.fields(
+                        Projections.include("capacity", "booked"),
+                        Projections.excludeId()
+                ))
+        );
 
-    return getCollectionDto()
-            .aggregate(pipeline)
-            .collect()
-            .first()
-            .onItem().transform(result -> result);
-}
-
-
+        return MongoUtil.aggregate(getCollectionDto(), pipeline, BookStatusFlightDto.class);
+    }
 
 
     public Uni<UpdateResult> updateFlightCapacityAndBookedStatus(String flightNumber) {
         Bson filter = Filters.eq("flightNumber", flightNumber);
 
-        return getCollectionDto()
-                .find(filter)
-                .collect()
-                .first()
-                .onItem().transformToUni(flight -> {
-                    if (flight == null) {
-                        return Uni.createFrom().failure(new FlightException("Flight not found", 404));
+        return MongoUtil.findOneByFilter(getCollectionDto(), filter)
+                .onItem()
+                .transformToUni(flight->{
+                    Bson update = Updates.inc("capacity",-1);
+                    if(flight.getCapacity() == 0){
+                                Updates.set("booked", true);
                     }
-
-                    Bson update;
-                    if (flight.getCapacity() == 1) {
-                        update = Updates.combine(
-                                Updates.inc("capacity", -1),
-                                Updates.set("booked", true)
-                        );
-                    } else {
-                        update = Updates.inc("capacity", -1);
-                    }
-
-                    return getCollectionDto()
-                            .updateOne(filter, update)
-                            .onItem().transform(updateResult -> {
-                                return UpdateResult.fromCounts(updateResult.getMatchedCount(), updateResult.getModifiedCount());
-                            });
+                    return MongoUtil.updateOne(getCollectionDto(), filter, update);
                 });
     }
 
 
-    public Uni<UpdateResult> incrementCapacity(String flightNumber) {
+    public Uni<UpdateResult> incrementCapacity(String flightNumber, ClientSession clientSession) {
         Bson filter = Filters.eq("flightNumber", flightNumber);
         Bson update = Updates.combine(
                 Updates.inc("capacity", 1),
                 Updates.set("booked", false)
         );
 
-        return getCollection()
-                .updateOne(filter, update)
-                .onItem().transform(updateResult -> {
-                    if (updateResult.getModifiedCount() > 0) {
-                        return new shared.mongoUtils.UpdateResult(updateResult.getMatchedCount(), updateResult.getModifiedCount());
-                    } else {
-                        throw new FlightException("Failed to update flight capacity", 500);
-                    }
-                });
+        return MongoUtil.updateOne(getCollection(), filter, update, clientSession);
     }
 
 
     public Uni<List<FlightDto>> findOutboundFlights(String departureAirportId, String destinationAirportId, LocalDateTime departureDateTime) {
-        return getCollectionFlight().find(Filters.and(
+        Bson filter = Filters.and(
                 Filters.eq("departureAirportId", departureAirportId),
                 Filters.eq("arrivalAirportId", destinationAirportId),
                 Filters.gte("departureTime", departureDateTime)
-        )).collect().asList();
+        );
+
+        return MongoUtil.findManyByFilter(getCollectionFlight(), filter);
     }
 
     public Uni<List<FlightDto>> findReturnFlights(String departureAirportId, String destinationAirportId, LocalDateTime returnDateTime) {
-        return getCollectionFlight().find(Filters.and(
-                Filters.eq("departureAirportId", destinationAirportId),
-                Filters.eq("arrivalAirportId", departureAirportId),
+        Bson filter = Filters.and(
+                Filters.eq("departureAirportId", departureAirportId),
+                Filters.eq("arrivalAirportId", destinationAirportId),
                 Filters.gte("departureTime", returnDateTime)
-        )).collect().asList();
+        );
+        return MongoUtil.findManyByFilter(getCollectionFlight(), filter);
     }
 
-
-    private ReactiveMongoCollection<BookStatusFlightDto> getCollectionDto(){
+    private ReactiveMongoCollection<BookStatusFlightDto> getCollectionDto() {
         return mongoService.getCollection("flights", BookStatusFlightDto.class);
     }
 
-    private ReactiveMongoCollection<FlightDto> getCollectionFlight(){
+    private ReactiveMongoCollection<FlightDto> getCollectionFlight() {
         return mongoService.getCollection("flights", FlightDto.class);
     }
 
-    private ReactiveMongoCollection<FlightEntity> getCollection(){
+    private ReactiveMongoCollection<FlightEntity> getCollection() {
         return mongoService.getCollection("flights", FlightEntity.class);
     }
 

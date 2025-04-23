@@ -1,6 +1,8 @@
 package flight.models.dto;
 
+import flight.enums.FlightStatus;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,14 +16,14 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class CreateFlightDto {
-    private String flightNumber;
-    private String departureAirportId;
-    private String arrivalAirportId;
-    private LocalDateTime departureTime;
-    private LocalDateTime arrivalTime;
-    private String status;
-    private double price;
-    private String airline;
-    private Integer capacity;
-    private boolean booked;
+    @NotNull private String flightNumber;
+    @NotNull private String departureAirportId;
+    @NotNull private String arrivalAirportId;
+    @NotNull private LocalDateTime departureTime;
+    @NotNull private LocalDateTime arrivalTime;
+    @NotNull private FlightStatus status;
+    @NotNull private double price;
+    @NotNull private String airline;
+    @NotNull private Integer capacity;
+    @NotNull private boolean booked;
 }

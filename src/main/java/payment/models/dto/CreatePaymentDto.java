@@ -1,6 +1,7 @@
 package payment.models.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,9 +17,9 @@ import java.sql.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CreatePaymentDto {
-    private String reservationId;
-    private Date paymentDate;
-    private double paymentAmount;
-    private PaymentMethod paymentMethod;
-    private PaymentStatus paymentStatus;
+    @NotNull private String reservationId;
+    @NotNull private Date paymentDate;
+    @NotNull private double paymentAmount;
+    @NotNull private PaymentMethod paymentMethod;
+    @NotNull private PaymentStatus paymentStatus;
 }

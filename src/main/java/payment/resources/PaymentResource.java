@@ -33,8 +33,8 @@ public class PaymentResource {
     @GET
     @PermitAll
     @Path("/lowest")
-    public Uni<List<PaymentDto>> listLowestAmount(@BeanParam PaginationQueryParams params){
-        return paymentService.listLowestAmount(params.getSkip(),params.getLimit());
+    public Uni<List<PaymentDto>> listLowestAmount(@BeanParam PaginationQueryParams paginationQueryParams){
+        return paymentService.listLowestAmount(paginationQueryParams);
     }
 
 

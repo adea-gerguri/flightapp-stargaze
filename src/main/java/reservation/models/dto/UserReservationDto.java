@@ -1,5 +1,6 @@
 package reservation.models.dto;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,7 +11,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class UserReservationDto {
-    private String userId;
-    private long reservationCount;
-    private long refundCount;
+    @NotNull private String userId;
+    @NotNull private long reservationCount;
+    @NotNull private long refundCount;
 }

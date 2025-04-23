@@ -1,22 +1,20 @@
 package reservation.repository;
 
 import com.mongodb.client.model.*;
+import com.mongodb.reactivestreams.client.ClientSession;
 import io.quarkus.mongodb.FindOptions;
 import io.quarkus.mongodb.reactive.ReactiveMongoCollection;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.bson.conversions.Bson;
-import reservation.enums.ReservationStatus;
-import reservation.exception.ReservationException;
-import reservation.mappers.ReservationMapper;
 import reservation.models.ReservationEntity;
 import reservation.models.dto.ReservationDto;
 import reservation.models.dto.UserReservationDto;
+import shared.PaginationQueryParams;
 import shared.mongoUtils.InsertResult;
 import shared.mongoUtils.MongoUtil;
 
-import java.sql.SQLOutput;
 import java.util.Arrays;
 import java.util.List;
 
@@ -26,12 +24,12 @@ public class ReservationRepository {
     MongoUtil mongoService;
 
 
-    public Uni<List<ReservationEntity>> listReservations(int skip, int limit) {
-        return MongoUtil.listAll(getCollection(), new FindOptions().skip(skip).limit(limit));
+    public Uni<List<ReservationEntity>> listReservations(PaginationQueryParams paginationQueryParams) {
+        return MongoUtil.listAll(getCollection(), new FindOptions().skip(paginationQueryParams.getSkip()).limit(paginationQueryParams.getLimit()));
     }
 
-    public Uni<InsertResult> insertReservation(ReservationEntity reservation){
-        return MongoUtil.insertOne(getCollection(), reservation);
+    public Uni<InsertResult> insertReservation(ReservationEntity reservation, ClientSession clientSession){
+        return MongoUtil.insertOne(getCollection(), reservation, clientSession);
     }
 
     private ReactiveMongoCollection<ReservationEntity> getCollection() {
@@ -47,21 +45,12 @@ public class ReservationRepository {
                 Filters.eq("userId", userId),
                 Filters.eq("flightNumber", flightNumber)
         );
-        return getCollectionDto()
-                .find(filter)
-                .collect()
-                .first()
-                .onItem().invoke(reservation -> {
-                    if (reservation == null) {
-                        System.out.println("No reservation found for filter: " + filter);
-                    } else {
-                        System.out.println("Found reservation: " + reservation);
-                    }
-                });
+
+        return MongoUtil.findOneByFilter(getCollectionDto(), filter);
 
     }
 
-    public Uni<UserReservationDto> findUserWithMostReservations() {
+    public Uni<List<UserReservationDto>> findUserWithMostReservations() {
         List<Bson> pipeline = Arrays.asList(
                 Aggregates.group("$userId", Accumulators.sum("reservationCount", 1)),
                 Aggregates.sort(Sorts.descending("reservationCount")),
@@ -73,24 +62,11 @@ public class ReservationRepository {
                 ))
         );
 
-        return getCollectionDto()
-                .aggregate(pipeline, UserReservationDto.class)
-                .collect()
-                .first()
-                .onItem().transform(reservation -> {
-                    if (reservation != null) {
-                        return reservation;
-                    } else {
-                        throw new ReservationException("No reservations found", 404);
-                    }
-                })
-                .onFailure(ReservationException.class)
-                .recoverWithItem(() -> {
-                    throw new ReservationException("No reservations found", 404);
-                });
+        return MongoUtil.aggregate(getCollectionDto(), pipeline, UserReservationDto.class);
+
     }
 
-    public Uni<UserReservationDto> findUserWithMostRefundedTickets() {
+    public Uni<List<UserReservationDto>> findUserWithMostRefundedTickets() {
         List<Bson> pipeline = Arrays.asList(
                 Aggregates.match(Filters.eq("reservationStatus", "RESERVED")),
                 Aggregates.group("$userId", Accumulators.sum("refundCount", 1)),
@@ -103,25 +79,8 @@ public class ReservationRepository {
                 ))
         );
 
-        return getCollectionDto()
-                .aggregate(pipeline, UserReservationDto.class)
-                .collect()
-                .first()
-                .onItem().transform(reservation -> {
-                    if (reservation != null) {
-                        return reservation;
-                    } else {
-                        throw new ReservationException("No refunded reservations found", 404);
-                    }
-                })
-                .onFailure(ReservationException.class)
-                .recoverWithItem(() -> {
-                    throw new ReservationException("No refunded reservations found", 404);
-                });
+        return MongoUtil.aggregate(getCollectionDto(), pipeline, UserReservationDto.class);
     }
-
-
-
 
 }
 

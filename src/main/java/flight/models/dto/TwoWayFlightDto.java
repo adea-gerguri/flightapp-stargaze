@@ -1,6 +1,8 @@
 package flight.models.dto;
 
+import flight.enums.FlightStatus;
 import flight.enums.FlightType;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,15 +20,15 @@ public class TwoWayFlightDto {
     private List<StopoverDto> fullPath;
     private Duration totalTravelTime;
     private Duration totalWaitingTime;
-    private String flightNumber;
-    private LocalDateTime departureTime;
-    private LocalDateTime arrivalTime;
-    private FlightType flightType;
-    private String status;
-    private double price;
-    private String airline;
-    private Integer capacity;
-    private boolean booked;
+    @NotNull private String flightNumber;
+    @NotNull private LocalDateTime departureTime;
+    @NotNull private LocalDateTime arrivalTime;
+    @NotNull private FlightType flightType;
+    @NotNull private FlightStatus status;
+    @NotNull private double price;
+    @NotNull private String airline;
+    @NotNull private Integer capacity;
+    @NotNull private boolean booked;
     private double totalPrice;
     private FlightInfoDto outboundFlight;
     private FlightInfoDto returnFlight;

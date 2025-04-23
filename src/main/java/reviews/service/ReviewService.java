@@ -20,6 +20,7 @@ import reviews.models.dto.LowestRatedReviewDto;
 import reviews.models.dto.ReviewDto;
 import reviews.repository.ReviewRepository;
 import shared.GlobalHibernateValidator;
+import shared.PaginationQueryParams;
 import shared.mongoUtils.DeleteResult;
 import shared.mongoUtils.InsertResult;
 
@@ -33,29 +34,20 @@ public class ReviewService {
     @Inject
     GlobalHibernateValidator validator;
 
-    public Uni<List<ReviewEntity>> listReviews() {
-        return reviewRepository.listReviews();
-    }
 
-    public Uni<InsertResult> addReview(@Valid CreateReviewDto reviewDto) {
+    public Uni<InsertResult> addReview(CreateReviewDto reviewDto) {
         return validator.validate(reviewDto)
-                .onFailure(ConstraintViolationException.class)
-                .transform(e->new ReviewException(e.getMessage(),400))
                 .flatMap(validatedDto->{
                     return reviewRepository.add(ReviewMapper.toReviewEntity(validatedDto));
                 });
     }
 
-    public Uni<List<HighestRatedReviewDto>> listHighestRated(int skip, int limit){
-        return reviewRepository.highestRated(skip,limit)
-                .onFailure()
-                .transform(e-> new ReviewException(e.getMessage(),404));
+    public Uni<List<HighestRatedReviewDto>> listHighestRated(PaginationQueryParams paginationQueryParams){
+        return reviewRepository.highestRated(paginationQueryParams);
     }
 
-    public Uni<List<LowestRatedReviewDto>> listLowestRated(int skip, int limit){
-        return reviewRepository.lowestRated(skip,limit)
-                .onFailure()
-                .transform(e-> new ReviewException(e.getMessage(),404));
+    public Uni<List<LowestRatedReviewDto>> listLowestRated(PaginationQueryParams paginationQueryParams){
+        return reviewRepository.lowestRated(paginationQueryParams);
     }
 
 }
