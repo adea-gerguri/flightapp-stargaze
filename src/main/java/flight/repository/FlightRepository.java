@@ -16,6 +16,7 @@ import flight.models.FlightEntity;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
+import shared.PaginationQueryParams;
 import shared.mongoUtils.DeleteResult;
 import shared.mongoUtils.InsertResult;
 import shared.mongoUtils.MongoUtil;
@@ -33,11 +34,11 @@ public class FlightRepository {
     @Inject
     MongoUtil mongoService;
 
-    public Uni<List<FlightDto>> listLowestPrice(int skip, int limit) {
+    public Uni<List<FlightDto>> listLowestPrice(PaginationQueryParams params) {
         List<Bson> pipeline = List.of(
                 Aggregates.sort(Sorts.ascending("price")),
-                Aggregates.skip(skip),
-                Aggregates.limit(limit),
+                Aggregates.skip(params.getSkip()),
+                Aggregates.limit(params.getLimit()),
                 Aggregates.project(Projections.fields(
                         Projections.computed("id", "$_id"),
                         Projections.include("name", "price")

@@ -16,6 +16,7 @@ import jakarta.validation.ConstraintViolationException;
 import jakarta.ws.rs.BadRequestException;
 import org.bson.types.ObjectId;
 import shared.GlobalHibernateValidator;
+import shared.PaginationQueryParams;
 import shared.exceptions.DocumentNotFound;
 import shared.mongoUtils.DeleteResult;
 import shared.mongoUtils.InsertResult;
@@ -41,8 +42,8 @@ public class FlightService {
     @Inject
     GlobalHibernateValidator validator;
 
-    public Uni<List<FlightDto>> listLowestPrice(int skip, int limit){
-        return flightRepository.listLowestPrice(skip, limit);
+    public Uni<List<FlightDto>> listLowestPrice(PaginationQueryParams params){
+        return flightRepository.listLowestPrice(params);
     }
 
     public Uni<DeleteResult> deleteById(String id) {
