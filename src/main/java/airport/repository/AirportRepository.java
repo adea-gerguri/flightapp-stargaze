@@ -51,9 +51,7 @@ public class AirportRepository {
                 Projections.include("airportCount")
         )));
 
-        pipeline.addAll(MongoUtil.listWithPagination(paginationQueryParams, "airportCount"));
-
-        return MongoUtil.aggregate(getCollection(), pipeline, AirportGroupByCountryDto.class);
+        return MongoUtil.aggregate(getCollection(), pipeline, paginationQueryParams, AirportGroupByCountryDto.class);
     }
 
     public Uni<List<AirportGroupByCityDto>> groupAirportsByCity(PaginationQueryParams paginationQueryParams) {
@@ -64,9 +62,7 @@ public class AirportRepository {
                 Projections.include("airportCount")
         )));
 
-        pipeline.addAll(MongoUtil.listWithPagination(paginationQueryParams, "airportCount"));
-
-        return MongoUtil.aggregate(getCollection(), pipeline, AirportGroupByCityDto.class);
+        return MongoUtil.aggregate(getCollection(), pipeline, paginationQueryParams, AirportGroupByCityDto.class);
     }
 
 

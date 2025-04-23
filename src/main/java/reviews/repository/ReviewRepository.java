@@ -31,28 +31,22 @@ public class ReviewRepository {
 
     public Uni<List<HighestRatedReviewDto>> highestRated(PaginationQueryParams paginationQueryParams) {
         List<Bson> pipeline = List.of(
-                sort(descending("rating")),
-                skip(paginationQueryParams.getSkip()),
-                limit(paginationQueryParams.getLimit()),
                 project(fields(
                         computed("id", "$_id"),
                         include("rating", "reviewDate", "message")
                 ))
         );
-        return MongoUtil.aggregate(getCollection(), pipeline, HighestRatedReviewDto.class);
+        return MongoUtil.aggregate(getCollection(), pipeline, paginationQueryParams, HighestRatedReviewDto.class);
     }
 
     public Uni<List<LowestRatedReviewDto>> lowestRated(PaginationQueryParams paginationQueryParams) {
         List<Bson> pipeline = List.of(
-                sort(ascending("rating")),
-                skip(paginationQueryParams.getSkip()),
-                limit(paginationQueryParams.getLimit()),
                 project(fields(
                         computed("id", "$_id"),
                         include("rating", "reviewDate", "message")
                 ))
         );
-        return MongoUtil.aggregate(getCollection(), pipeline, LowestRatedReviewDto.class);
+        return MongoUtil.aggregate(getCollection(), pipeline, paginationQueryParams, LowestRatedReviewDto.class);
     }
 
     private ReactiveMongoCollection<ReviewEntity> getCollection() {

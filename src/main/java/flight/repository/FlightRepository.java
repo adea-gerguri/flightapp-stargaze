@@ -34,17 +34,14 @@ public class FlightRepository {
     @Inject
     MongoUtil mongoService;
 
-    public Uni<List<FlightDto>> listLowestPrice(PaginationQueryParams params) {
+    public Uni<List<FlightDto>> listLowestPrice(PaginationQueryParams paginationQueryParams) {
         List<Bson> pipeline = List.of(
-                Aggregates.sort(Sorts.ascending("price")),
-                Aggregates.skip(params.getSkip()),
-                Aggregates.limit(params.getLimit()),
                 Aggregates.project(Projections.fields(
                         Projections.computed("id", "$_id"),
                         Projections.include("name", "price")
                 ))
         );
-        return MongoUtil.aggregate(getCollection(), pipeline, FlightDto.class);
+        return MongoUtil.aggregate(getCollection(), pipeline, paginationQueryParams, FlightDto.class);
     }
 
     public Uni<List<FlightDto>> findFastestRoute(RouteQueryParams routeQueryParams) {

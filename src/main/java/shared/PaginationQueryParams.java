@@ -22,6 +22,8 @@ public class PaginationQueryParams {
     @Range(min=0, max=1)
     private int sort;
 
+    private String sortField;
+
     public int setSkip(int skip) {
         return this.skip=skip;
     }

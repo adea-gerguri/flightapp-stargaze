@@ -39,8 +39,7 @@ public class BaggageRepository {
                 Projections.computed("baggageType","$_id"),
                 Projections.include("totalWeight", "count")
         )));
-        pipeline.addAll(MongoUtil.listWithPagination(paginationQueryParams, "totalWeight"));
-        return MongoUtil.aggregate(getCollection(), pipeline, BaggageWeightDto.class);
+        return MongoUtil.aggregate(getCollection(), pipeline,paginationQueryParams, BaggageWeightDto.class);
     }
 
     public Uni<List<BaggagePriceDto>> groupByReservationIdAndTotalPrice(PaginationQueryParams paginationQueryParams) {
@@ -55,9 +54,8 @@ public class BaggageRepository {
                         Projections.include("totalPrice", "count")
                 )
         )));
-        pipeline.addAll(MongoUtil.listWithPagination(paginationQueryParams, "totalPrice"));
 
-        return MongoUtil.aggregate(getCollection(), pipeline, BaggagePriceDto.class);
+        return MongoUtil.aggregate(getCollection(), pipeline,paginationQueryParams, BaggagePriceDto.class);
     }
 
 

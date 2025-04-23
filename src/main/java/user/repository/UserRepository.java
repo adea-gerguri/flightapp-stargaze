@@ -32,15 +32,12 @@ public class UserRepository {
 
     public Uni<List<UserDto>> listUsers(PaginationQueryParams paginationQueryParams) {
         List<Bson> pipeline = List.of(
-                Aggregates.sort(ascending("name")),
-                Aggregates.skip(paginationQueryParams.getSkip()),
-                Aggregates.limit(paginationQueryParams.getLimit()),
                 Aggregates.project(Projections.fields(
                         Projections.include("id", "name", "email", "phoneNumber")
                 ))
         );
 
-        return MongoUtil.aggregate(getCollection(), pipeline, UserDto.class);
+        return MongoUtil.aggregate(getCollection(), pipeline, paginationQueryParams, UserDto.class);
     }
 
 

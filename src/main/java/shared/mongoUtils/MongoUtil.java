@@ -56,13 +56,13 @@ public class MongoUtil {
                 .failWith(new DocumentNotFound("Document not found",404));
     }
 
-    public static List<Bson> listWithPagination(PaginationQueryParams paginationQueryParams, String sortByField) {
+    private static List<Bson> listWithPagination(PaginationQueryParams paginationQueryParams) {
         List<Bson> pipeline = new ArrayList<>();
 
         if (paginationQueryParams.getSort() == 1) {
-            pipeline.add(Aggregates.sort(Sorts.ascending(sortByField)));
+            pipeline.add(Aggregates.sort(Sorts.ascending(paginationQueryParams.getSortField())));
         } else {
-            pipeline.add(Aggregates.sort(Sorts.descending(sortByField)));
+            pipeline.add(Aggregates.sort(Sorts.descending(paginationQueryParams.getSortField())));
         }
 
         pipeline.add(Aggregates.skip(paginationQueryParams.getSkip()));
@@ -70,6 +70,21 @@ public class MongoUtil {
 
         return pipeline;
     }
+
+    public static List<Bson> listWithPagination(PaginationQueryParams paginationQueryParams, String field) {
+            List<Bson> pipeline = new ArrayList<>();
+
+            if (paginationQueryParams.getSort() == 1) {
+                pipeline.add(Aggregates.sort(Sorts.ascending(field)));
+            } else {
+                pipeline.add(Aggregates.sort(Sorts.descending(field)));
+            }
+
+            pipeline.add(Aggregates.skip(paginationQueryParams.getSkip()));
+            pipeline.add(Aggregates.limit(paginationQueryParams.getLimit()));
+
+            return pipeline;
+        }
 
 
 
@@ -192,6 +207,14 @@ public class MongoUtil {
     }
 
     public static <T> Uni<List<T>> aggregate(ReactiveMongoCollection<?> collection, List<Bson> pipeline, Class<T> outputClass) {
+        return collection
+                .withDocumentClass(outputClass)
+                .aggregate(pipeline, outputClass)
+                .collect()
+                .asList();
+    }
+    public static <T> Uni<List<T>> aggregate(ReactiveMongoCollection<?> collection, List<Bson> pipeline,PaginationQueryParams paginationQueryParams, Class<T> outputClass) {
+        pipeline.addAll(MongoUtil.listWithPagination(paginationQueryParams));
         return collection
                 .withDocumentClass(outputClass)
                 .aggregate(pipeline, outputClass)

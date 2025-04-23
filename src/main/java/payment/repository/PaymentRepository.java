@@ -29,15 +29,12 @@ public class PaymentRepository {
 
     public Uni<List<PaymentDto>> lowestAmount(PaginationQueryParams paginationQueryParams) {
         List<Bson> pipeline = List.of(
-                Aggregates.sort(Sorts.ascending("paymentAmount")),
-                Aggregates.skip(paginationQueryParams.getSkip()),
-                Aggregates.limit(paginationQueryParams.getLimit()),
                 Aggregates.project(Projections.fields(
                         Projections.computed("id", "$_id"),
                         Projections.include("reservationId", "paymentAmount", "paymentMethod", "paymentStatus")
                 ))
         );
-        return MongoUtil.aggregate(getCollection(), pipeline, PaymentDto.class);
+        return MongoUtil.aggregate(getCollection(), pipeline, paginationQueryParams, PaymentDto.class);
     }
 
     public Uni<InsertResult> addPayment(PaymentEntity payment) {
