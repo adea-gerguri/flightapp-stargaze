@@ -1,20 +1,15 @@
 package reservation.resources;
 
-import airline.models.AirlineEntity;
-import airline.models.dto.CreateAirlineDTO;
-import airline.service.AirlineService;
+import reservation.models.dto.RevenueAggregationDto;
 import io.smallrye.mutiny.Uni;
 import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
-import reservation.models.dto.CreateReservationDto;
-import reservation.models.dto.ReservationDto;
+import reservation.models.dto.RevenueQueryParams;
+import reservation.models.dto.*;
 import reservation.models.ReservationEntity;
-import reservation.models.dto.UserRefundDto;
-import reservation.models.dto.UserReservationDto;
-import reservation.repository.ReservationRepository;
 import reservation.service.ReservationService;
 import shared.PaginationQueryParams;
 import shared.mongoUtils.InsertResult;
@@ -49,16 +44,38 @@ public class ReservationResource {
     }
 
     @GET
-    @Path("/most-reservations")
-    @PermitAll
-    public Uni<List<UserReservationDto>> getUserWithMostReservations() {
-        return service.findUserWithMostReservations();
+    @Path("/user-most-refunded-tickets")
+    @RolesAllowed("Admin")
+    public Uni<List<UserReservationDto>> findUserWithMostRefundedTickets() {
+        return service.findUserWithMostRefundedTickets();
     }
 
     @GET
-    @Path("/user-most-refunded-tickets")
-    public Uni<List<UserReservationDto>> findUserWithMostRefundedTickets() {
-        return service.findUserWithMostRefundedTickets();
+    @Path("/user-most-reserved-tickets")
+    @RolesAllowed("Admin")
+    public Uni<List<UserReservationDto>> findUserWithMostReservedTickets(){
+        return service.findUserWithMostReservedTickets();
+    }
+
+    @GET
+    @PermitAll
+    @Path("/revenue-over-time")
+    public Uni<List<ReservationRevenueDto>> salesOverTime(@BeanParam RevenueQueryParams revenueQueryParams){
+        return service.salesOverTime(revenueQueryParams);
+    }
+
+    @GET
+    @PermitAll
+    @Path("/faceted-revenue")
+    public Uni<List<ReservationRevenueDto>> facetedRevenue(@BeanParam RevenueQueryParams revenueQueryParams){
+        return service.facetedRevenue(revenueQueryParams);
+    }
+
+    @GET
+    @PermitAll
+    @Path("/revenue-over-timeperiods")
+    public Uni<List<RevenueAggregationDto>> revenueOverTimePeriods(@BeanParam RevenueQueryParams revenueQueryParams){
+        return service.revenueOverTime(revenueQueryParams);
     }
 
 }

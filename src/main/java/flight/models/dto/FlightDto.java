@@ -1,13 +1,12 @@
 package flight.models.dto;
 
-import flight.enums.FlightStatus;
-import jakarta.validation.constraints.NotBlank;
+import flight.models.enums.FlightStatus;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import flight.enums.FlightType;
+import flight.models.enums.FlightType;
 
 import java.time.LocalDateTime;
 import java.util.List;

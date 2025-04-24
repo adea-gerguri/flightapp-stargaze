@@ -43,11 +43,7 @@ public class AirportService {
     }
 
     public Uni<DeleteResult> deleteAirport(String id) {
-         return repository.delete(id)
-                 .onItem()
-                .transform(deleteResult->{
-                    return deleteResult;
-                });
+         return repository.delete(id);
     }
 
     public Uni<List<AirportGroupByCountryDto>> groupAirportsByCountry(PaginationQueryParams paginationQueryParams) {

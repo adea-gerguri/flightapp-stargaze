@@ -1,9 +1,7 @@
 package flight.service;
 
-import airline.exceptions.AirlineException;
-import airline.mappers.AirlineMapper;
 import com.mongodb.reactivestreams.client.ClientSession;
-import flight.RouteQueryParams;
+import flight.models.dto.RouteQueryParams;
 import flight.exceptions.FlightException;
 import flight.mappers.FlightMapper;
 import flight.models.FlightEntity;
@@ -12,12 +10,8 @@ import flight.repository.FlightRepository;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.validation.ConstraintViolationException;
-import jakarta.ws.rs.BadRequestException;
-import org.bson.types.ObjectId;
 import shared.GlobalHibernateValidator;
 import shared.PaginationQueryParams;
-import shared.exceptions.DocumentNotFound;
 import shared.mongoUtils.DeleteResult;
 import shared.mongoUtils.InsertResult;
 import shared.mongoUtils.UpdateResult;
@@ -47,14 +41,9 @@ public class FlightService {
     }
 
     public Uni<DeleteResult> deleteById(String id) {
-        return flightRepository.deleteById(id)
-                .onItem()
-                .transform(deleteResult->{
-                    return deleteResult;
-                });
+        return flightRepository.deleteById(id);
     }
-
-
+    
     public Uni<InsertResult> addFlight(CreateFlightDto flightDto) {
     return validator.validate(flightDto)
             .flatMap(validatedDto ->
@@ -125,19 +114,22 @@ public class FlightService {
         return flightRepository.findFastestRoute(routeQueryParams);
     }
 
-    public Uni<List<FlightDto>> getCheapestRoute(String departureAirportId, String destinationAirportId, String departureDate){
-        return flightRepository.findCheapestRoute(destinationAirportId, departureDate, departureAirportId);
+    public Uni<List<FlightDto>> getCheapestRoute(RouteQueryParams routeQueryParams){
+        return flightRepository.findCheapestRoute(routeQueryParams);
     }
 
-    public Uni<List<FlightDto>> getMostExpensiveRoute(String departureAirportId, String destinationAirportId, String departureDate){
-        return flightRepository.findMostExpensiveRoute(destinationAirportId, departureDate, departureAirportId);
+    public Uni<List<FlightDto>> getMostExpensiveRoute(RouteQueryParams routeQueryParams){
+        return flightRepository.findMostExpensiveRoute(routeQueryParams);
     }
 
-    public Uni<List<FlightDto>> getFastestStopover(String departureAirportId, String destinationAirportId, String departureDate){
-        return flightRepository.findFlightsWithStopsAndWaitingTimes(departureAirportId, destinationAirportId, departureDate);
+    public Uni<List<FlightDto>> flightsWithStopsAndWaitingTimes(RouteQueryParams routeQueryParams){
+        return flightRepository.findFlightsWithStopsAndWaitingTimes(routeQueryParams);
     }
-
-
+    
+    public Uni<List<FlightDto>> trendOverTime(DateQueryParams dateQueryParams){
+        return flightRepository.trendOverTime(dateQueryParams);
+    }
+    
     public Uni<List<TwoWayFlightDto>> findTwoWayFlights(String departureAirportId, String destinationAirportId, String departureDateTimeStr, String returnDateTimeStr) {
         LocalDateTime departureDateTime = LocalDateTime.parse(departureDateTimeStr);
         LocalDateTime returnDateTime = LocalDateTime.parse(returnDateTimeStr);

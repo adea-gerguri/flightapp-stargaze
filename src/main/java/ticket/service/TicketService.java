@@ -40,34 +40,23 @@ public class TicketService {
     }
 
     public Uni<DeleteResult> deleteTicketById(String id){
-
-        return repository.deleteTicket(id)
-                .onItem()
-                .transform(deleteResult -> {
-                    return deleteResult;
-                });
+        return repository.deleteTicket(id);
     }
 
     public Uni<List<TicketDto>> getCheapestTicket() {
-        return repository.getCheapestTicket()
-                .onItem().transform(ticketDto -> {
-                    return ticketDto;
-                });
+        return repository.getCheapestTicket();
     }
 
     public Uni<List<TicketDto>> getMostExpensiveTicket() {
-        return repository.getMostExpensiveTicket()
-                .onItem().transform(ticketDto -> {
-                    return ticketDto;
-                });
+        return repository.getMostExpensiveTicket();
     }
 
     public Uni<TicketEntity> findAvailableTicketByFlightNumber(String flightNumber, ClientSession clientSession) {
         return repository.findAvailableTicketByFlightNumber(flightNumber, clientSession);
     }
 
-    public Uni<TicketEntity> findTicketByFlightNumber(String flightNumber, String userId, ClientSession clientSession){
-        return repository.findTicketByFlightNumber(flightNumber, userId, clientSession);
+    public Uni<TicketEntity> findTicketByFlightNumber(String flightNumber, String userId){
+        return repository.findTicketByFlightNumber(flightNumber, userId);
     }
 
     public Uni<UpdateResult> updateTicket(String ticketId, String userId, String reservationId, double totalPrice, ClientSession clientSession ) {

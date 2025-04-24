@@ -2,15 +2,12 @@ package reservation.models;
 
 
 import baggage.models.BaggageEntity;
+import baggage.models.enums.BaggageType;
 import lombok.*;
-import org.bson.codecs.pojo.annotations.BsonId;
-import reservation.enums.ReservationStatus;
-import reservation.enums.SeatType;
-import org.bson.types.ObjectId;
+import reservation.models.enums.ReservationStatus;
+import reservation.models.enums.SeatType;
 
 import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.Map;
 
 @Setter
 @Getter
@@ -26,5 +23,5 @@ public class ReservationEntity {
     private SeatType seatSelection;
     private boolean specialAssistance;
     private double price;
-    private BaggageEntity baggage;
+    private BaggageType baggage;
 }

@@ -1,31 +1,29 @@
 package reservation.models.dto;
 
 import baggage.models.BaggageEntity;
-import jakarta.json.bind.annotation.JsonbDateFormat;
-import jakarta.validation.constraints.NotBlank;
+import baggage.models.enums.BaggageType;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import reservation.enums.ReservationStatus;
-import reservation.enums.SeatType;
+import reservation.models.enums.ReservationStatus;
+import reservation.models.enums.SeatType;
 
 import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.Map;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
 public class CreateReservationDto {
-    @NotNull private LocalDateTime reservationDate;
+    private LocalDateTime reservationDate;
     @NotNull private String flightNumber;
     @NotNull private String userId;
     @NotNull private SeatType seatSelection;
-    @NotNull private ReservationStatus reservationStatus;
+    private ReservationStatus reservationStatus;
     @NotNull private boolean specialAssistance;
-    @NotNull private double price;
-    @NotNull private BaggageEntity baggage;
+    private double price;
+    private double totalPrice;
+    @NotNull private BaggageType baggage;
 }

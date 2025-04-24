@@ -17,8 +17,7 @@ import reviews.models.dto.CreateReviewDto;
 import reviews.models.dto.HighestRatedReviewDto;
 import reviews.models.dto.LowestRatedReviewDto;
 import reviews.models.dto.ReviewDto;
-import reviews.models.ReviewEntity;
-import reviews.repository.ReviewRepository;
+
 import reviews.service.ReviewService;
 import shared.PaginationQueryParams;
 import shared.mongoUtils.DeleteResult;

@@ -39,11 +39,7 @@ public class AirlineService {
 
 
   public Uni<DeleteResult> deleteAirline(String id){
-      return airlineRepository.deleteAirline(id)
-              .onItem()
-              .transform(deleteResult->{
-                  return deleteResult;
-              });
+      return airlineRepository.deleteAirline(id);
   }
 
 

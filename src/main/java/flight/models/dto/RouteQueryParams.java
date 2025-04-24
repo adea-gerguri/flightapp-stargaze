@@ -1,9 +1,10 @@
-package flight;
+package flight.models.dto;
 
-import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.QueryParam;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -12,7 +13,7 @@ public class RouteQueryParams {
 
     @QueryParam("destinationAirportId")private String destinationAirportId;
 
-    @QueryParam("departureDate")private String departureDate;
+    @QueryParam("departureDate")private LocalDateTime departureDate;
 
-    @QueryParam("arrivalDate") private String arrivalDate;
+    @QueryParam("arrivalDate") private LocalDateTime arrivalDate;
 }

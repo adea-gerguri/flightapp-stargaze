@@ -2,7 +2,7 @@ package reservation.models.dto;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
-import reservation.enums.ReservationStatus;
+import reservation.models.enums.ReservationStatus;
 
 @AllArgsConstructor
 @NoArgsConstructor

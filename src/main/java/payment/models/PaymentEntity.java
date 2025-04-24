@@ -4,9 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.bson.types.ObjectId;
-import payment.enums.PaymentMethod;
-import payment.enums.PaymentStatus;
+import payment.models.enums.PaymentMethod;
+import payment.models.enums.PaymentStatus;
 
 import java.sql.Date;
 

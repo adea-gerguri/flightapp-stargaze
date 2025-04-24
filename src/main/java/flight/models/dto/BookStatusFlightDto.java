@@ -1,7 +1,5 @@
 package flight.models.dto;
 
-import flight.enums.FlightStatus;
-import flight.enums.FlightType;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 

@@ -2,11 +2,9 @@ package flight.repository;
 
 import com.mongodb.client.model.*;
 import com.mongodb.reactivestreams.client.ClientSession;
-import flight.RouteQueryParams;
-import flight.exceptions.FlightException;
-import flight.mappers.FlightMapper;
+import flight.models.dto.DateQueryParams;
+import flight.models.dto.RouteQueryParams;
 import flight.models.dto.BookStatusFlightDto;
-import flight.models.dto.CreateFlightDto;
 import flight.models.dto.FlightDto;
 import io.quarkus.mongodb.reactive.ReactiveMongoCollection;
 import io.smallrye.mutiny.Uni;
@@ -15,7 +13,6 @@ import jakarta.inject.Inject;
 import flight.models.FlightEntity;
 import org.bson.Document;
 import org.bson.conversions.Bson;
-import org.bson.types.ObjectId;
 import shared.PaginationQueryParams;
 import shared.mongoUtils.DeleteResult;
 import shared.mongoUtils.InsertResult;
@@ -45,11 +42,14 @@ public class FlightRepository {
     }
 
     public Uni<List<FlightDto>> findFastestRoute(RouteQueryParams routeQueryParams) {
+        String arrivalAirportId = routeQueryParams.getDestinationAirportId();
+        String departureAirportId = routeQueryParams.getDepartureAirportId();
+        LocalDateTime departureDate = routeQueryParams.getDepartureDate();
         List<Bson> pipeline = List.of(
                 Aggregates.match(Filters.and(
-                        Filters.eq("arrivalAirportId", routeQueryParams.getDestinationAirportId()),
-                        Filters.eq("departureAirportId", routeQueryParams.getDepartureAirportId()),
-                        Filters.regex("departureTime", routeQueryParams.getDepartureDate())
+                        Filters.eq("arrivalAirportId", arrivalAirportId),
+                        Filters.eq("departureAirportId", departureAirportId),
+                        Filters.regex("departureTime", String.valueOf(departureDate))
                 )),
                 Aggregates.project(Projections.fields(
                         Projections.include("flightNumber", "departureAirportId", "arrivalAirportId", "departureTime", "arrivalTime"),
@@ -69,12 +69,15 @@ public class FlightRepository {
     }
 
 
-    public Uni<List<FlightDto>> findCheapestRoute(String destinationAirportId, String departureDate, String departureAirportId) {
+    public Uni<List<FlightDto>> findCheapestRoute(RouteQueryParams routeQueryParams) {
+        String destinationAirportId = routeQueryParams.getDestinationAirportId();
+        LocalDateTime departureDate= routeQueryParams.getDepartureDate();
+        String departureAirportId = routeQueryParams.getDepartureAirportId();
         List<Bson> pipeline = List.of(
                 Aggregates.match(Filters.and(
                         Filters.eq("arrivalAirportId", destinationAirportId),
                         Filters.eq("departureAirportId", departureAirportId),
-                        Filters.regex("departureTime", departureDate)
+                        Filters.regex("departureTime", String.valueOf(departureDate))
                 )),
                 Aggregates.project(Projections.fields(
                         Projections.include("flightNumber", "departureAirportId", "arrivalAirportId", "departureTime", "arrivalTime", "price"),
@@ -87,12 +90,15 @@ public class FlightRepository {
         return MongoUtil.aggregate(getCollection(), pipeline, FlightDto.class);
     }
 
-    public Uni<List<FlightDto>> findMostExpensiveRoute(String destinationAirportId, String departureDate, String departureAirportId) {
+    public Uni<List<FlightDto>> findMostExpensiveRoute(RouteQueryParams routeQueryParams) {
+        String destinationAirportId = routeQueryParams.getDestinationAirportId();
+        String departureAirportId = routeQueryParams.getDepartureAirportId();
+        LocalDateTime departureDate = routeQueryParams.getDepartureDate();
         List<Bson> pipeline = List.of(
                 Aggregates.match(Filters.and(
                         Filters.eq("arrivalAirportId", destinationAirportId),
                         Filters.eq("departureAirportId", departureAirportId),
-                        Filters.regex("departureTime", departureDate)
+                        Filters.regex("departureTime", String.valueOf(departureDate))
                 )),
                 Aggregates.project(Projections.fields(
                         Projections.include("flightNumber", "departureAirportId", "arrivalAirportId", "departureTime", "arrivalTime", "price"),
@@ -105,14 +111,17 @@ public class FlightRepository {
         return MongoUtil.aggregate(getCollection(), pipeline, FlightDto.class);
     }
 
-    public Uni<List<FlightDto>> findFlightsWithStopsAndWaitingTimes(String departureAirportId, String destinationAirportId, String departureDate) {
+    public Uni<List<FlightDto>> findFlightsWithStopsAndWaitingTimes(RouteQueryParams routeQueryParams) {
+        String destinationAirportId = routeQueryParams.getDestinationAirportId();
+        String departureAirportId = routeQueryParams.getDepartureAirportId();
+        LocalDateTime departureDate = routeQueryParams.getDepartureDate();
         List<Bson> pipeline = new ArrayList<>();
 
         pipeline.add(
                 Aggregates.match(Filters.and(
                         Filters.eq("departureAirportId", departureAirportId),
                         Filters.eq("arrivalAirportId", destinationAirportId),
-                        Filters.regex("departureTime", departureDate)
+                        Filters.regex("departureTime", String.valueOf(departureDate))
                 )));
         pipeline.add(
                 Aggregates.graphLookup("flights",
@@ -122,8 +131,8 @@ public class FlightRepository {
                         "connections",
                         new GraphLookupOptions()
                                 .maxDepth(2)
-                                .restrictSearchWithMatch(Filters.regex("departureTime", departureDate))
-                ));
+                                .restrictSearchWithMatch(Filters.regex("departureTime", String.valueOf(departureDate))
+                )));
         pipeline.add(Aggregates.project(Projections.fields(
                 Projections.computed("fullPath", new Document("$concatArrays", List.of(
                         List.of(new Document("departureAirportId", "$departureAirportId")
@@ -241,6 +250,27 @@ public class FlightRepository {
                 Filters.gte("departureTime", returnDateTime)
         );
         return MongoUtil.findManyByFilter(getCollectionFlight(), filter);
+    }
+
+    public Uni<List<FlightDto>> trendOverTime(DateQueryParams dateQueryParams){
+        LocalDateTime fromDate = dateQueryParams.getFromDate();
+        LocalDateTime toDate = dateQueryParams.getToDate();
+        List<Bson> pipeline = Arrays.asList(
+                Aggregates.match(
+                        Filters.and(
+                               Filters.gte("departureTime", fromDate),
+                                Filters.lte("departureTime",toDate)
+
+                        )
+                ),
+                Aggregates.facet(
+                        new Facet("flightList",
+                                Aggregates.sort(Sorts.ascending("departureTime"))
+                        )
+                )
+        );
+        return MongoUtil.aggregate(getCollectionFlight(), pipeline, FlightDto.class);
+
     }
 
     private ReactiveMongoCollection<BookStatusFlightDto> getCollectionDto() {

@@ -5,14 +5,13 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import user.enums.UserType;
+import user.models.enums.UserType;
 
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
 public class CreateUserDto {
-    @NotNull
     @NotNull private String username;
     @NotNull private String firstName;
     @NotNull private String lastName;

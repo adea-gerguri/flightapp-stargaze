@@ -4,8 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import baggage.enums.BaggageType;
-import org.bson.types.ObjectId;
+import baggage.models.enums.BaggageType;
 
 @Setter
 @Getter

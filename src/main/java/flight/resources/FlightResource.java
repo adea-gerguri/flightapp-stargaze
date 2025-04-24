@@ -1,8 +1,7 @@
 package flight.resources;
 
 
-import flight.RouteQueryParams;
-import flight.exceptions.FlightException;
+import flight.models.dto.RouteQueryParams;
 import flight.models.dto.*;
 import flight.service.FlightService;
 import io.smallrye.mutiny.Uni;
@@ -11,12 +10,10 @@ import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
 import shared.PaginationQueryParams;
 import shared.mongoUtils.DeleteResult;
 import shared.mongoUtils.InsertResult;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Path("/flights")
@@ -30,10 +27,9 @@ public class FlightResource {
     @GET
     @PermitAll
     @Path("/lowest")
-    public Uni<List<FlightDto>> listLowestPrice(@BeanParam PaginationQueryParams params){
+    public Uni<List<FlightDto>> listLowestPrice(@BeanParam PaginationQueryParams params) {
         return flightService.listLowestPrice(params);
     }
-
 
     @POST
     @RolesAllowed("admin")
@@ -57,22 +53,27 @@ public class FlightResource {
 
     @GET
     @Path("/stopover")
-    public Uni<List<FlightDto>> possibleStopOvers(@BeanParam RouteQueryParams params) {
-        return flightService.getFastestStopover(params.getDepartureAirportId(), params.getDestinationAirportId(), params.getDepartureDate());
+    public Uni<List<FlightDto>> possibleStopOvers(@BeanParam RouteQueryParams routeQueryParams) {
+        return flightService.flightsWithStopsAndWaitingTimes(routeQueryParams);
     }
 
     @GET
     @Path("/cheapest")
     public Uni<List<FlightDto>> getCheapestRoute(@BeanParam RouteQueryParams params) {
-        return flightService.getCheapestRoute(params.getDepartureAirportId(), params.getDestinationAirportId(), params.getDepartureDate());
+        return flightService.getCheapestRoute(params);
     }
 
     @GET
     @Path("/most-expensive")
-    public Uni<List<FlightDto>> getMostExpensiveRoute(@BeanParam RouteQueryParams params) {
-        return flightService.getMostExpensiveRoute(params.getDepartureAirportId(), params.getDestinationAirportId(), params.getDepartureDate());
+    public Uni<List<FlightDto>> getMostExpensiveRoute(@BeanParam RouteQueryParams routeQueryParams) {
+        return flightService.getMostExpensiveRoute(routeQueryParams);
     }
 
+    @GET
+    @Path("/trends")
+    public Uni<List<FlightDto>> trendOverTime(@BeanParam DateQueryParams dateQueryParams){
+        return flightService.trendOverTime(dateQueryParams);
+    }
 
     @GET
     @Path("/two-way")

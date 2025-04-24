@@ -1,4 +1,4 @@
-package baggage.enums;
+package baggage.models.enums;
 
 public enum BaggageType {
     CABIN,

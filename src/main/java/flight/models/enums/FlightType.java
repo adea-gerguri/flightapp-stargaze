@@ -1,4 +1,4 @@
-package flight.enums;
+package flight.models.enums;
 
 public enum FlightType {
     DOMESTIC,

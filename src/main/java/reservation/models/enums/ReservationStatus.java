@@ -1,4 +1,4 @@
-package reservation.enums;
+package reservation.models.enums;
 
 public enum ReservationStatus {
     RESERVED,

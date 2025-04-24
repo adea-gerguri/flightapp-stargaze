@@ -4,12 +4,10 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import flight.enums.FlightType;
-import flight.enums.FlightStatus;
-import org.bson.types.ObjectId;
+import flight.models.enums.FlightType;
+import flight.models.enums.FlightStatus;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Getter
 @Setter

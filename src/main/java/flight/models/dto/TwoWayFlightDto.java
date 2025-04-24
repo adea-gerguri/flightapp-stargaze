@@ -1,7 +1,7 @@
 package flight.models.dto;
 
-import flight.enums.FlightStatus;
-import flight.enums.FlightType;
+import flight.models.enums.FlightStatus;
+import flight.models.enums.FlightType;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

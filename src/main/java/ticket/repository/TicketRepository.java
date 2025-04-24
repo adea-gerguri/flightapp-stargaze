@@ -65,12 +65,12 @@ public class TicketRepository {
         return MongoUtil.findOneByFilter(getCollection(), filter, clientSession);
     }
 
-    public Uni<TicketEntity> findTicketByFlightNumber(String flightNumber, String userId, ClientSession clientSession){
+    public Uni<TicketEntity> findTicketByFlightNumber(String flightNumber, String userId){
         Bson filter = Filters.and(
                 Filters.eq("flightNumber", flightNumber),
                 Filters.eq("userId", userId)
         );
-        return MongoUtil.findOneByFilter(getCollection(), filter, clientSession);
+        return MongoUtil.findOneByFilter(getCollection(), filter);
     }
 
     public Uni<UpdateResult> updateTicket(String ticketId, String userId, String reservationId, double totalPrice, ClientSession clientSession) {

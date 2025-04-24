@@ -43,11 +43,7 @@ public class UserService {
     }
 
     public Uni<DeleteResult> deleteUser(String id){
-        return userRepository.deleteUser(id)
-                .onItem()
-                .transform(deleteResult->{
-                    return deleteResult;
-                });
+        return userRepository.deleteUser(id);
     }
 
     public Uni<UpdateResult> increaseBalance(String userId, double price, ClientSession clientSession) {

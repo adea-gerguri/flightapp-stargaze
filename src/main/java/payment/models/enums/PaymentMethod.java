@@ -1,4 +1,4 @@
-package payment.enums;
+package payment.models.enums;
 
 public enum PaymentMethod {
     CASH,
