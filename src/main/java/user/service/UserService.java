@@ -50,7 +50,7 @@ public class UserService {
         return userRepository.increaseBalance(userId, price, clientSession);
     }
 
-    public Uni<Void> processRefundForUser(String userId, String flightNumber) {
+    public Uni<UserRefundDto> processRefundForUser(String userId, String flightNumber) {
         return reservationService.processRefund(userId, flightNumber);
     }
 

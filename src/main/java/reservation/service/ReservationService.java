@@ -1,5 +1,7 @@
 package reservation.service;
 
+import flight.exceptions.FlightException;
+import reservation.exception.ReservationException;
 import reservation.mappers.ReservationMapper;
 import reservation.models.dto.RevenueAggregationDto;
 import flight.service.FlightService;
@@ -90,43 +92,47 @@ public class ReservationService {
     return reservationRepository.findByUserIdAndFlightNumber(userId, flightNumber);
   }
 
-  public Uni<Void> runRefundTransactions(String userId,ReservationDto reservation, TicketEntity ticketEntity,String flightNumber){
+
+  public Uni<UserRefundDto> runRefundTransactions(String userId, ReservationDto reservation, TicketEntity ticketEntity, String flightNumber) {
     return mongoTransactionManager
             .start()
-            .call(
-                    session->
-                            userService
-                                    .increaseBalance(userId, reservation.getPrice(), session.getSession())
-                                    .flatMap(
-                                            updateResult->
-                                                    ticketService.updateTicket(
-                                                            ticketEntity.getId(),
-                                                            ticketEntity.getUserId(),
-                                                            ticketEntity.getReservationId(),
-                                                            ticketEntity.getPrice(),
-                                                            session.getSession()
-                                                    ).flatMap(
-                                                            ticketUpdateResult->{
-                                                              reservation.setReservationStatus(ReservationStatus.REFUNDED);
-                                                              return flightService.incrementCapacity(
-                                                                      flightNumber,
-                                                                      session.getSession()
-                                                              );
-                                                            }
-                                                    ).flatMap(flightUpdateResult->
-                                                              Uni.createFrom().item(new UserRefundDto(
-                                                                      userId,
-                                                                      1,
-                                                                      0,
-                                                                      ReservationStatus.REFUNDED))
-                                                    )))
-            .call(session->mongoTransactionManager.commit(session.getSessionUni()))
-            .replaceWithVoid();
+            .flatMap(session ->
+                    userService
+                            .increaseBalance(userId, reservation.getPrice(), session.getSession())
+                            .flatMap(updateResult ->
+                                    ticketService
+                                            .updateTicket(
+                                                    ticketEntity.getId(),
+                                                    ticketEntity.getUserId(),
+                                                    ticketEntity.getReservationId(),
+                                                    ticketEntity.getPrice(),
+                                                    session.getSession()
+                                            )
+                                            .flatMap(ticketUpdateResult -> {
+                                              reservation.setReservationStatus(ReservationStatus.REFUNDED);
+                                              return flightService
+                                                      .incrementCapacity(flightNumber, session.getSession());
+                                            })
+                                            .flatMap(flightUpdateResult ->
+                                                    mongoTransactionManager
+                                                            .commit(session.getSessionUni())
+                                                            .replaceWith(
+                                                                    new UserRefundDto(
+                                                                            userId,
+                                                                            1,
+                                                                            0,
+                                                                            ReservationStatus.REFUNDED
+                                                                    )
+                                                            )
+                                            )
+                            )
+            );
   }
 
 
 
-  public Uni<Void>processRefund(String userId, String flightNumber){
+
+  public Uni<UserRefundDto>processRefund(String userId, String flightNumber){
     return reservationRepository
             .findByUserIdAndFlightNumber(userId, flightNumber)
             .flatMap(reservation->{
