@@ -51,8 +51,8 @@ public class TicketService {
         return repository.getMostExpensiveTicket();
     }
 
-    public Uni<TicketEntity> findAvailableTicketByFlightNumber(String flightNumber, ClientSession clientSession) {
-        return repository.findAvailableTicketByFlightNumber(flightNumber, clientSession);
+    public Uni<TicketEntity> findAvailableTicketByFlightNumber(String flightNumber) {
+        return repository.findAvailableTicketByFlightNumber(flightNumber);
     }
 
     public Uni<TicketEntity> findTicketByFlightNumber(String flightNumber, String userId){

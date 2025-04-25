@@ -18,76 +18,76 @@ import ticket.models.dto.TicketDto;
 import java.util.Arrays;
 import java.util.List;
 
-
 @ApplicationScoped
 public class TicketRepository {
-    @Inject
-    MongoUtil mongoUtil;
+  @Inject MongoUtil mongoUtil;
 
-    public Uni<InsertResult> addTicket(TicketEntity ticketEntity) {
-        return MongoUtil.insertOne(getCollection(), ticketEntity);
-    }
+  public Uni<InsertResult> addTicket(TicketEntity ticketEntity) {
+    return MongoUtil.insertOne(getCollection(), ticketEntity);
+  }
 
-    public Uni<DeleteResult> deleteTicket(String id){
-        return MongoUtil.deleteOne(getCollection(),id );
-    }
+  public Uni<DeleteResult> deleteTicket(String id) {
+    return MongoUtil.deleteOne(getCollection(), id);
+  }
 
-    public Uni<List<TicketDto>> getCheapestTicket() {
-        List<Bson> pipeline = Arrays.asList(
-                Aggregates.sort(Sorts.ascending("price")),
-                Aggregates.limit(1),
-                Aggregates.project(Projections.fields(
-                        Projections.include("firstName", "lastName", "passportNumber", "price", "baggageEntityList"),
-                        Projections.excludeId()
-                ))
-        );
-        return MongoUtil.aggregate(getCollection(), pipeline, TicketDto.class);
-    }
+  public Uni<List<TicketDto>> getCheapestTicket() {
+    List<Bson> pipeline =
+        Arrays.asList(
+            Aggregates.sort(Sorts.ascending("price")),
+            Aggregates.limit(1),
+            Aggregates.project(
+                Projections.fields(
+                    Projections.include(
+                        "firstName", "lastName", "passportNumber", "price", "baggageEntityList"),
+                    Projections.excludeId())));
+    return MongoUtil.aggregate(getCollection(), pipeline, TicketDto.class);
+  }
 
-    public Uni<List<TicketDto>> getMostExpensiveTicket() {
-        List<Bson> pipeline = Arrays.asList(
-                Aggregates.sort(Sorts.descending("price")),
-                Aggregates.limit(1),
-                Aggregates.project(Projections.fields(
-                        Projections.include("firstName", "lastName", "passportNumber", "price", "baggageEntityList"),
-                        Projections.excludeId()
-                ))
-        );
+  public Uni<List<TicketDto>> getMostExpensiveTicket() {
+    List<Bson> pipeline =
+        Arrays.asList(
+            Aggregates.sort(Sorts.descending("price")),
+            Aggregates.limit(1),
+            Aggregates.project(
+                Projections.fields(
+                    Projections.include(
+                        "firstName", "lastName", "passportNumber", "price", "baggageEntityList"),
+                    Projections.excludeId())));
 
-        return MongoUtil.aggregate(getCollection(), pipeline, TicketDto.class);
-    }
+    return MongoUtil.aggregate(getCollection(), pipeline, TicketDto.class);
+  }
 
-    public Uni<TicketEntity> findAvailableTicketByFlightNumber(String flightNumber, ClientSession clientSession){
-        Bson filter = Filters.and(
-            Filters.eq("flightNumber", flightNumber),
-            Filters.eq("userId", null)
-        );
-        return MongoUtil.findOneByFilter(getCollection(), filter, clientSession);
-    }
+  public Uni<TicketEntity> findAvailableTicketByFlightNumber(String flightNumber) {
+    Bson filter = Filters.and(Filters.eq("flightNumber", flightNumber), Filters.eq("userId", null));
+    return MongoUtil.findOneByFilter(getCollection(), filter);
+  }
 
-    public Uni<TicketEntity> findTicketByFlightNumber(String flightNumber, String userId){
-        Bson filter = Filters.and(
-                Filters.eq("flightNumber", flightNumber),
-                Filters.eq("userId", userId)
-        );
-        return MongoUtil.findOneByFilter(getCollection(), filter);
-    }
+  public Uni<TicketEntity> findTicketByFlightNumber(String flightNumber, String userId) {
+    Bson filter =
+        Filters.and(Filters.eq("flightNumber", flightNumber), Filters.eq("userId", userId));
+    return MongoUtil.findOneByFilter(getCollection(), filter);
+  }
 
-    public Uni<UpdateResult> updateTicket(String ticketId, String userId, String reservationId, double totalPrice, ClientSession clientSession) {
-        Bson filter = Filters.eq("_id", ticketId);
-        Bson update = Updates.combine(
-                Updates.set("userId", userId),
-                Updates.set("reservationId", reservationId),
-                Updates.set("price", totalPrice)
-        );
-        return MongoUtil.updateOne(getCollectionDto(), filter, update, clientSession);
-    }
+  public Uni<UpdateResult> updateTicket(
+      String ticketId,
+      String userId,
+      String reservationId,
+      double totalPrice,
+      ClientSession clientSession) {
+    Bson filter = Filters.eq("_id", ticketId);
+    Bson update =
+        Updates.combine(
+            Updates.set("userId", userId),
+            Updates.set("reservationId", reservationId),
+            Updates.set("price", totalPrice));
+    return MongoUtil.updateOne(getCollectionDto(), filter, update, clientSession);
+  }
 
-    private ReactiveMongoCollection<TicketEntity> getCollection() {
-        return mongoUtil.getCollection("tickets", TicketEntity.class);
-    }
-    private ReactiveMongoCollection<TicketDto> getCollectionDto() {
-        return mongoUtil.getCollection("tickets", TicketDto.class);
-    }
+  private ReactiveMongoCollection<TicketEntity> getCollection() {
+    return mongoUtil.getCollection("tickets", TicketEntity.class);
+  }
 
+  private ReactiveMongoCollection<TicketDto> getCollectionDto() {
+    return mongoUtil.getCollection("tickets", TicketDto.class);
+  }
 }

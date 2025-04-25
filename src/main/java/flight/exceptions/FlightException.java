@@ -1,14 +1,14 @@
 package flight.exceptions;
 
 public class FlightException extends RuntimeException {
-    private final int statusCode;
+  private final int statusCode;
 
-    public FlightException(String message, int statusCode) {
-        super(message);
-        this.statusCode = statusCode;
-    }
+  public FlightException(int statusCode, String message) {
+    super(message);
+    this.statusCode = statusCode;
+  }
 
-    public int getStatusCode() {
-        return statusCode;
-    }
+  public int getStatusCode() {
+    return statusCode;
+  }
 }

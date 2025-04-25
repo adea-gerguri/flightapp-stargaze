@@ -1,22 +1,16 @@
 package shared.mongoUtils;
-import com.mongodb.TransactionOptions;
-import com.mongodb.ReadConcern;
-import com.mongodb.ReadPreference;
-import com.mongodb.WriteConcern;
 import com.mongodb.reactivestreams.client.ClientSession;
-import io.quarkus.mongodb.reactive.ReactiveMongoClient;
+import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import io.smallrye.mutiny.Uni;
 import org.reactivestreams.FlowAdapters;
-
 
 @ApplicationScoped
 public class MongoTransactionManager {
     @Inject
     MongoDB mongoDB;
 
-    public Uni<MongoSession> execute() {
+    public Uni<MongoSession> start() {
         return mongoDB.mongoClient.startSession()
                 .flatMap(clientSession -> {
                     clientSession.startTransaction();

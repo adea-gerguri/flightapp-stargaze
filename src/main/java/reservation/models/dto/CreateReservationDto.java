@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import reservation.models.ReservationEntity;
 import reservation.models.enums.ReservationStatus;
 import reservation.models.enums.SeatType;
 
@@ -17,13 +18,13 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class CreateReservationDto {
-    private LocalDateTime reservationDate;
-    @NotNull private String flightNumber;
-    @NotNull private String userId;
-    @NotNull private SeatType seatSelection;
-    private ReservationStatus reservationStatus;
-    @NotNull private boolean specialAssistance;
-    private double price;
-    private double totalPrice;
-    @NotNull private BaggageType baggage;
+  private LocalDateTime reservationDate;
+  @NotNull private String flightNumber;
+  @NotNull private String userId;
+  @NotNull private SeatType seatSelection;
+  private ReservationStatus reservationStatus;
+  @NotNull private boolean specialAssistance;
+  private double price;
+  private double totalPrice;
+  @NotNull private BaggageType baggage;
 }
