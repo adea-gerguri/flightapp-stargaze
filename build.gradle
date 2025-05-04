@@ -1,6 +1,8 @@
 plugins {
     id 'java'
     id 'io.quarkus'
+    id 'io.freefair.lombok' version "8.13.1"
+
 }
 
 repositories {
@@ -9,6 +11,11 @@ repositories {
 }
 
 dependencies {
+    implementation 'io.quarkus:quarkus-hibernate-validator'
+    implementation 'io.quarkus:quarkus-jsonb'
+    implementation 'io.quarkus:quarkus-elytron-security-properties-file'
+    implementation 'io.quarkus:quarkus-rest-jsonb'
+    implementation 'io.quarkus:quarkus-mongodb-client'
     implementation enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
     implementation 'io.quarkus:quarkus-mutiny'
     implementation 'io.quarkus:quarkus-rest'

@@ -1,2 +1,27 @@
-greeting:
-  message: "hello"
+quarkus:
+  http:
+    port: ${LOCAL_HOST_PORT:8881}
+    auth:
+      basic: 'true'
+  test:
+    continuous-testing: disabled
+  naming:
+    enable-jndi: 'true'
+  class-loading:
+    removed-resources:
+      '"io':
+        quarkus:quarkus-mongodb-client": META-INF/services/com.mongodb.spi.dns.DnsClientProvider
+  mongodb:
+    connection-string: '${QUARKUS_MONGODB_CONNECTION_STRING}'
+  security:
+    users:
+      embedded:
+        enabled: 'true'
+        plain-text: 'true'
+        users:
+          adea: adea
+        roles:
+          adea:
+            admin
+
+
